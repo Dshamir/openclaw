@@ -1,140 +1,128 @@
 /**
- * sif-memory — OpenClaw Plugin
+ * SIF Memory Plugin — Entry Point (Phase 2)
  *
- * Sovereign Intelligence Framework beachhead plugin (A35 Phase 1).
- * Integrates SIF's portable pointer graph with OpenClaw's plugin system.
+ * Registers the Sovereign Intelligence Framework as an OpenClaw plugin:
+ *   - Tools: sif_search, sif_add, sif_status, sif_decay
+ *   - Hooks: prompt injection, learning extraction, session lifecycle
+ *   - Memory Backend: SifMemoryManager (when memory.backend = "sif")
  *
- * Architecture:
- *   - before_prompt_build → injects relevant pointer context
- *   - llm_output → extracts learning signals for the pointer graph
- *   - session_start/end → lifecycle tracking
- *   - before_compaction → archives sessions for cognitive archaeology
- *   - Custom tools: sif_recall, sif_learn, sif_reinforce, sif_status
- *   - Custom command: /sif
+ * Configuration in openclaw.yaml:
  *
- * @see https://github.com/Dshamir/sif-knowledge-base
+ *   memory:
+ *     backend: sif        # Activates SIF as the memory backend
+ *     sif:
+ *       graphPath: ~/.sif/pointer-graph.yaml
+ *       sifWeight: 1.2     # Boost SIF results in merged search
+ *       builtinWeight: 1.0  # Standard weight for file-based results
+ *       maxResults: 5       # Max SIF pointers per search
+ *       includeBuiltin: true # Also search builtin file/embedding index
+ *
+ * @see Amendment A35 — SIF-OpenClaw Integration
  */
 
 import type {
   OpenClawPluginDefinition,
   OpenClawPluginApi,
 } from "../../src/plugins/types.js";
-
 import { PointerGraph } from "./pointer-graph.js";
 import { createSifTools } from "./tools.js";
 import { registerSifHooks } from "./hooks.js";
 
-const SIF_PLUGIN_ID = "sif-memory";
-const SIF_PLUGIN_VERSION = "0.1.0";
+// ---------------------------------------------------------------------------
+// Graph Path Resolution
+// ---------------------------------------------------------------------------
 
-const plugin: OpenClawPluginDefinition = {
-  id: SIF_PLUGIN_ID,
+function resolveGraphPath(api: OpenClawPluginApi): string {
+  // 1. Plugin config
+  const pluginConfig = api.pluginConfig as Record<string, unknown> | undefined;
+  if (pluginConfig?.graphPath && typeof pluginConfig.graphPath === "string") {
+    return pluginConfig.graphPath;
+  }
+
+  // 2. SIF memory backend config
+  const sifConfig = (api.config as any)?.memory?.sif;
+  if (sifConfig?.graphPath && typeof sifConfig.graphPath === "string") {
+    return sifConfig.graphPath;
+  }
+
+  // 3. Environment variable
+  const envPath = process.env.SIF_GRAPH_PATH;
+  if (envPath) return envPath;
+
+  // 4. Default: ~/.sif/pointer-graph.yaml
+  const home = process.env.HOME || process.env.USERPROFILE || ".";
+  return `${home}/.sif/pointer-graph.yaml`;
+}
+
+// ---------------------------------------------------------------------------
+// Plugin Definition
+// ---------------------------------------------------------------------------
+
+const sifMemoryPlugin: OpenClawPluginDefinition = {
+  id: "sif-memory",
   name: "SIF Memory",
   description:
-    "Sovereign Intelligence Framework — portable, provider-agnostic intelligence layer",
-  version: SIF_PLUGIN_VERSION,
+    "Sovereign Intelligence Framework — portable pointer graph memory " +
+    "that persists skills, knowledge, archetypes, and breakthroughs across sessions. " +
+    "Phase 2: Deep memory integration as MemorySearchManager backend.",
+  version: "0.2.0",
   kind: "memory",
 
   async register(api: OpenClawPluginApi) {
+    const logger = api.logger;
     const graphPath = resolveGraphPath(api);
-    const graph = new PointerGraph(graphPath, api.logger);
+    const isSifBackend = (api.config as any)?.memory?.backend === "sif";
 
-    api.logger.info(`SIF Memory v${SIF_PLUGIN_VERSION} — loading pointer graph from ${graphPath}`);
-
-    await graph.load();
-
-    api.logger.info(
-      `SIF pointer graph loaded: ${graph.size()} pointers, ` +
-      `${graph.typeCount("skill")} skills, ${graph.typeCount("knowledge")} knowledge, ` +
-      `${graph.typeCount("archetype")} archetypes, ${graph.typeCount("breakthrough")} breakthroughs`
+    logger.info(
+      `SIF Memory v0.2.0 initializing — ` +
+      `graph: ${graphPath}, ` +
+      `backend mode: ${isSifBackend ? "SIF (deep integration)" : "plugin-only (tools + hooks)"}`
     );
 
-    // Register agent tools (sif_recall, sif_learn, sif_reinforce, sif_status)
-    const tools = createSifTools(graph, api.logger);
+    // Initialize the pointer graph
+    const graph = new PointerGraph(graphPath, logger);
+
+    try {
+      await graph.load();
+      logger.info(
+        `SIF: loaded ${graph.size()} pointers ` +
+        `(${graph.status().skills}s/${graph.status().knowledge}k/` +
+        `${graph.status().archetypes}a/${graph.status().breakthroughs}b)`
+      );
+    } catch (err) {
+      logger.warn(`SIF: failed to load graph, starting fresh: ${err}`);
+    }
+
+    // Register tools (always available regardless of backend mode)
+    const tools = createSifTools(graph);
     for (const tool of tools) {
-      api.registerTool(tool, { name: tool.name });
+      api.registerTool(tool);
     }
 
     // Register lifecycle hooks
     registerSifHooks(api, graph);
 
-    // Register /sif command
-    api.registerCommand({
-      name: "sif",
-      description: "Show SIF intelligence layer status",
-      acceptsArgs: true,
-      requireAuth: false,
-      handler: (ctx) => {
-        const status = graph.status();
-        const subcommand = ctx.args?.trim();
-
-        if (subcommand === "health") {
-          return {
-            text: formatHealthReport(status),
-          };
+    // Register service for graceful shutdown
+    api.registerService({
+      id: "sif-memory-persistence",
+      async start(ctx) {
+        ctx.logger.info("SIF persistence service started");
+      },
+      async stop(ctx) {
+        if (graph.isDirty()) {
+          ctx.logger.info("SIF: saving pointer graph on shutdown");
+          await graph.save();
         }
-
-        return {
-          text: formatStatusSummary(status),
-        };
       },
     });
+
+    if (isSifBackend) {
+      logger.info(
+        "SIF: running as memory backend — search results will include " +
+        "pointer graph intelligence alongside file-based chunks"
+      );
+    }
   },
 };
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function resolveGraphPath(api: OpenClawPluginApi): string {
-  // Priority: plugin config > env var > default
-  const fromConfig = api.pluginConfig?.graphPath as string | undefined;
-  if (fromConfig) return api.resolvePath(fromConfig);
-
-  const fromEnv = process.env.SIF_GRAPH_PATH;
-  if (fromEnv) return fromEnv;
-
-  // Default: ~/.sif/pointer-graph.yaml
-  const home = process.env.HOME || process.env.USERPROFILE || ".";
-  return `${home}/.sif/pointer-graph.yaml`;
-}
-
-type GraphStatus = ReturnType<PointerGraph["status"]>;
-
-function formatStatusSummary(s: GraphStatus): string {
-  return [
-    `🧠 **SIF Memory** v${SIF_PLUGIN_VERSION}`,
-    ``,
-    `📊 Pointers: ${s.totalPointers}`,
-    `  Skills: ${s.skills} | Knowledge: ${s.knowledge}`,
-    `  Archetypes: ${s.archetypes} | Breakthroughs: ${s.breakthroughs}`,
-    `  Context: ${s.context}`,
-    ``,
-    `⚡ Health: ${s.healthScore >= 0.8 ? "Good" : s.healthScore >= 0.5 ? "Fair" : "Needs attention"}`,
-    `📅 Last sync: ${s.lastSync || "never"}`,
-    `🔒 Sovereignty: User-owned`,
-  ].join("\n");
-}
-
-function formatHealthReport(s: GraphStatus): string {
-  return [
-    `🧠 **SIF Health Report**`,
-    ``,
-    `Total pointers: ${s.totalPointers}`,
-    `Avg weight: ${s.avgWeight.toFixed(3)}`,
-    `Health score: ${(s.healthScore * 100).toFixed(1)}%`,
-    ``,
-    `Type distribution:`,
-    `  Skills:         ${s.skills}`,
-    `  Knowledge:      ${s.knowledge}`,
-    `  Archetypes:     ${s.archetypes}`,
-    `  Breakthroughs:  ${s.breakthroughs}`,
-    `  Context:        ${s.context}`,
-    ``,
-    `Decayed pointers (weight < 0.3): ${s.decayedCount}`,
-    `Strong pointers (weight > 0.7): ${s.strongCount}`,
-    `Graph path: ${s.graphPath}`,
-  ].join("\n");
-}
-
-export default plugin;
+export default sifMemoryPlugin;

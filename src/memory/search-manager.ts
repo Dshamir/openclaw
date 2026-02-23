@@ -10,6 +10,7 @@ import type {
 
 const log = createSubsystemLogger("memory");
 const QMD_MANAGER_CACHE = new Map<string, MemorySearchManager>();
+const SIF_MANAGER_CACHE = new Map<string, MemorySearchManager>();
 
 export type MemorySearchManagerResult = {
   manager: MemorySearchManager | null;
@@ -22,6 +23,105 @@ export async function getMemorySearchManager(params: {
   purpose?: "default" | "status";
 }): Promise<MemorySearchManagerResult> {
   const resolved = resolveMemoryBackendConfig(params);
+
+  // ---------------------------------------------------------------------------
+  // SIF backend — composite manager wrapping builtin + pointer graph
+  // ---------------------------------------------------------------------------
+  if (resolved.backend === "sif") {
+    const statusOnly = params.purpose === "status";
+    const cacheKey = `sif:${params.agentId}`;
+
+    if (!statusOnly) {
+      const cached = SIF_MANAGER_CACHE.get(cacheKey);
+      if (cached) {
+        return { manager: cached };
+      }
+    }
+
+    try {
+      // Resolve the builtin manager as the delegate
+      let builtinManager: MemorySearchManager | null = null;
+      const sifConfig = params.cfg.memory?.sif;
+      const includeBuiltin = sifConfig?.includeBuiltin !== false;
+
+      if (includeBuiltin) {
+        try {
+          const { MemoryIndexManager } = await import("./manager.js");
+          builtinManager = await MemoryIndexManager.get(params);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          log.warn(`sif: builtin memory unavailable: ${message}`);
+        }
+      }
+
+      // Load the SIF plugin's PointerGraph and SifMemoryManager
+      const { PointerGraph } = await import(
+        "../../plugins/sif-memory/pointer-graph.js"
+      );
+      const { SifMemoryManager } = await import(
+        "../../plugins/sif-memory/sif-memory-manager.js"
+      );
+
+      // Resolve graph path
+      const graphPath = resolveSifGraphPath(sifConfig?.graphPath);
+      const graph = new PointerGraph(graphPath, log);
+      await graph.load();
+
+      log.info(
+        `sif memory loaded: ${graph.size()} pointers, ` +
+        `builtin: ${includeBuiltin ? "enabled" : "disabled"}`,
+      );
+
+      const sifManager = new SifMemoryManager({
+        graph,
+        builtin: builtinManager,
+        config: {
+          graphPath,
+          sifWeight: sifConfig?.sifWeight,
+          builtinWeight: sifConfig?.builtinWeight,
+          maxSifResults: sifConfig?.maxResults,
+          minPointerWeight: sifConfig?.minPointerWeight,
+          includeBuiltin,
+        },
+        logger: log,
+      });
+
+      if (!statusOnly) {
+        // Wrap in fallback so if SIF fails, builtin still works
+        const wrapper = new FallbackMemoryManager(
+          {
+            primary: sifManager,
+            fallbackFactory: async () => {
+              const { MemoryIndexManager } = await import("./manager.js");
+              return await MemoryIndexManager.get(params);
+            },
+          },
+          () => SIF_MANAGER_CACHE.delete(cacheKey),
+        );
+        SIF_MANAGER_CACHE.set(cacheKey, wrapper);
+        return { manager: wrapper };
+      }
+
+      return { manager: sifManager };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      log.warn(`sif memory unavailable; falling back to builtin: ${message}`);
+    }
+
+    // Fallback to builtin if SIF fails to load
+    try {
+      const { MemoryIndexManager } = await import("./manager.js");
+      const manager = await MemoryIndexManager.get(params);
+      return { manager };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { manager: null, error: message };
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // QMD backend (unchanged)
+  // ---------------------------------------------------------------------------
   if (resolved.backend === "qmd" && resolved.qmd) {
     const statusOnly = params.purpose === "status";
     const cacheKey = buildQmdCacheKey(params.agentId, resolved.qmd);
@@ -62,6 +162,9 @@ export async function getMemorySearchManager(params: {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Builtin backend (default)
+  // ---------------------------------------------------------------------------
   try {
     const { MemoryIndexManager } = await import("./manager.js");
     const manager = await MemoryIndexManager.get(params);
@@ -71,6 +174,24 @@ export async function getMemorySearchManager(params: {
     return { manager: null, error: message };
   }
 }
+
+// ---------------------------------------------------------------------------
+// SIF Helpers
+// ---------------------------------------------------------------------------
+
+function resolveSifGraphPath(configPath?: string): string {
+  if (configPath?.trim()) {
+    return configPath.trim();
+  }
+  const fromEnv = process.env.SIF_GRAPH_PATH;
+  if (fromEnv) return fromEnv;
+  const home = process.env.HOME || process.env.USERPROFILE || ".";
+  return `${home}/.sif/pointer-graph.yaml`;
+}
+
+// ---------------------------------------------------------------------------
+// FallbackMemoryManager (unchanged from original)
+// ---------------------------------------------------------------------------
 
 class FallbackMemoryManager implements MemorySearchManager {
   private fallback: MemorySearchManager | null = null;

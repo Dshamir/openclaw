@@ -1,18 +1,16 @@
 /**
- * SIF Lifecycle Hooks
+ * SIF Lifecycle Hooks (Phase 2)
  *
  * Wires SIF into OpenClaw's plugin hook system for automatic operation:
  *
  *   before_prompt_build → Injects relevant pointer context into system prompt
+ *                         (SKIPPED when memory.backend = "sif" — manager handles it)
  *   llm_output          → Extracts learning signals from assistant responses
  *   session_start       → Initializes session tracking
  *   session_end         → Persists any dirty state
  *   before_compaction   → Archives session transcript for cognitive archaeology
  *   after_compaction    → Post-compaction bookkeeping
  *   before_reset        → Saves state before /new or /reset clears session
- *
- * These hooks make SIF "invisible" to the user — intelligence flows in and
- * out of the pointer graph without explicit tool calls.
  */
 
 import type { OpenClawPluginApi } from "../../src/plugins/types.js";
@@ -40,41 +38,53 @@ const ARCHIVE_SUBDIR = "archives";
 export function registerSifHooks(api: OpenClawPluginApi, graph: PointerGraph): void {
   const logger = api.logger;
 
+  // Detect if SIF is the configured memory backend.
+  // When backend = "sif", the SifMemoryManager handles search integration,
+  // so the before_prompt_build hook should NOT inject context (avoids double-injection).
+  const sifIsBackend = (api.config as any)?.memory?.backend === "sif";
+
   // -------------------------------------------------------------------------
-  // before_prompt_build — Inject SIF context
+  // before_prompt_build — Inject SIF context (only when NOT using sif backend)
   // -------------------------------------------------------------------------
-  api.on("before_prompt_build", (event, ctx) => {
-    const prompt = event.prompt;
-    if (!prompt || graph.size() === 0) return;
+  if (!sifIsBackend) {
+    api.on("before_prompt_build", (event, ctx) => {
+      const prompt = event.prompt;
+      if (!prompt || graph.size() === 0) return;
 
-    // Search the graph using the user's prompt as query
-    const relevant = graph.search(prompt, MAX_CONTEXT_POINTERS);
-    const eligible = relevant.filter((p) => p.weight >= MIN_CONTEXT_WEIGHT);
+      // Search the graph using the user's prompt as query
+      const relevant = graph.search(prompt, MAX_CONTEXT_POINTERS);
+      const eligible = relevant.filter((p) => p.weight >= MIN_CONTEXT_WEIGHT);
 
-    if (eligible.length === 0) return;
+      if (eligible.length === 0) return;
 
-    // Build context block
-    const contextLines = eligible.map((p) => {
-      return `[${p.type}|w:${p.weight.toFixed(2)}] ${p.content}`;
-    });
+      // Build context block
+      const contextLines = eligible.map((p) => {
+        return `[${p.type}|w:${p.weight.toFixed(2)}] ${p.content}`;
+      });
 
-    const sifContext = [
-      "## SIF Intelligence Context",
-      "The following accumulated knowledge is relevant to this conversation:",
-      "",
-      ...contextLines,
-      "",
-      "Use this context naturally — don't reference SIF explicitly unless the user asks.",
-    ].join("\n");
+      const sifContext = [
+        "## SIF Intelligence Context",
+        "The following accumulated knowledge is relevant to this conversation:",
+        "",
+        ...contextLines,
+        "",
+        "Use this context naturally — don't reference SIF explicitly unless the user asks.",
+      ].join("\n");
 
-    logger.debug?.(
-      `SIF: injecting ${eligible.length} pointers as context for prompt`
+      logger.debug?.(
+        `SIF: injecting ${eligible.length} pointers as context for prompt`
+      );
+
+      return {
+        prependContext: sifContext,
+      };
+    }, { priority: 50 });
+  } else {
+    logger.info(
+      "SIF: memory.backend = 'sif' detected — skipping before_prompt_build hook " +
+      "(SifMemoryManager handles search integration)"
     );
-
-    return {
-      prependContext: sifContext,
-    };
-  }, { priority: 50 });
+  }
 
   // -------------------------------------------------------------------------
   // llm_output — Extract learning signals
@@ -198,7 +208,7 @@ export function registerSifHooks(api: OpenClawPluginApi, graph: PointerGraph): v
 function extractLearningSignals(
   output: string,
   graph: PointerGraph,
-  logger: Logger,
+  logger: { info: (msg: string) => void; warn: (msg: string) => void; debug?: (msg: string) => void },
   sessionKey?: string,
 ): void {
   // Pattern 1: Explicit "key insight" markers

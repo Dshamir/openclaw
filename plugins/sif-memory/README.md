@@ -1,130 +1,172 @@
-# sif-memory — OpenClaw Plugin
+# SIF Memory Plugin for OpenClaw
 
-> **Sovereign Intelligence Framework beachhead plugin (A35 Phase 1)**
->
-> Portable, provider-agnostic intelligence layer for OpenClaw.
+**Sovereign Intelligence Framework — Deep Memory Integration**
 
-## What This Does
+> The LLM is the CPU. The Pointer Graph is the Soul.
 
-`sif-memory` makes OpenClaw SIF-aware by integrating the SIF pointer graph into
-OpenClaw's plugin lifecycle. It's the "beachhead" — the first foothold that enables
-all subsequent SIF capabilities within the OpenClaw ecosystem.
+## Overview
 
-**The LLM is the CPU. The Pointer Graph is the Soul.**
+SIF Memory transforms OpenClaw's memory system from file-chunk retrieval into
+a persistent intelligence layer. Your accumulated skills, knowledge, archetypes,
+and breakthroughs travel with you across sessions, models, and providers.
 
-### Architecture
+**Phase 2** makes SIF a first-class `MemorySearchManager` backend — pointer graph
+results appear alongside file-based chunks in OpenClaw's standard search pipeline.
+
+## Architecture
 
 ```
-+---------------------------------------------------+
-|                  OpenClaw Agent                    |
-|                                                    |
-|  +----------+  +----------+  +---------------+     |
-|  |  Skills   |  |  Hooks   |  |    Tools      |    |
-|  |          |  |          |  |               |    |
-|  | SKILL.md |  | 7 hooks  |  | sif_recall    |    |
-|  | (teaches |  | (auto    |  | sif_learn     |    |
-|  |  agent)  |  |  inject/ |  | sif_reinforce |    |
-|  |          |  |  extract)|  | sif_status    |    |
-|  +----------+  +----+-----+  +-------+-------+    |
-|                     |                |             |
-|              +------+----------------+------+      |
-|              |      SIF Pointer Graph       |      |
-|              |  (portable, user-sovereign)   |      |
-|              +------------------------------+      |
-+---------------------------------------------------+
+┌──────────────────────────────────────────────────────┐
+│                    OpenClaw Agent                      │
+│                                                        │
+│  memory.search("kubernetes deployment patterns")       │
+│        │                                               │
+│        ▼                                               │
+│  ┌─────────────────────────────┐                       │
+│  │     SifMemoryManager        │ ◄── Phase 2 backend   │
+│  │  (MemorySearchManager)      │                       │
+│  │                             │                       │
+│  │  ┌───────────┐ ┌─────────┐ │                       │
+│  │  │  Pointer   │ │ Builtin │ │                       │
+│  │  │  Graph     │ │ Index   │ │                       │
+│  │  │  Search    │ │ Search  │ │                       │
+│  │  └─────┬─────┘ └────┬────┘ │                       │
+│  │        │             │      │                       │
+│  │        └──── merge ──┘      │                       │
+│  │              │              │                       │
+│  └──────────────┼──────────────┘                       │
+│                 ▼                                       │
+│         Ranked Results                                 │
+│   [SIF pointers + file chunks]                         │
+└──────────────────────────────────────────────────────┘
 ```
-
-### Two-Component Design
-
-| Component | Purpose |
-|-----------|---------|
-| **Skill** (`skills/sif-memory/SKILL.md`) | Teaches the agent SIF concepts, tool usage, and when to invoke SIF capabilities |
-| **Plugin** (`plugins/sif-memory/index.ts`) | Runtime code: tools, lifecycle hooks, pointer graph management |
 
 ## Installation
 
-```bash
-# From the OpenClaw workspace
-openclaw plugin install @sif/openclaw-plugin
+### 1. Enable the plugin
 
-# Or add to openclaw.yaml
+In your `openclaw.yaml`:
+
+```yaml
 plugins:
-  - id: sif-memory
-    package: "@sif/openclaw-plugin"
+  - path: ./plugins/sif-memory
+```
+
+### 2. Choose your mode
+
+**Plugin Mode** (tools + hooks only):
+
+```yaml
+# No memory.backend change needed
+# SIF tools are registered, hooks inject context into prompts
+```
+
+**Backend Mode** (deep integration — recommended):
+
+```yaml
+memory:
+  backend: sif
+  sif:
+    graphPath: ~/.sif/pointer-graph.yaml
+    sifWeight: 1.2        # Boost SIF results in merged search
+    builtinWeight: 1.0     # Standard weight for file chunks
+    maxResults: 5          # Max SIF pointers per search
+    minPointerWeight: 0.15 # Skip decayed pointers
+    includeBuiltin: true   # Also search builtin file/embedding index
 ```
 
 ## Configuration
 
-Set the pointer graph location (optional — defaults to `~/.sif/pointer-graph.yaml`):
+| Key | Default | Description |
+|-----|---------|-------------|
+| `sif.graphPath` | `~/.sif/pointer-graph.yaml` | Path to the pointer graph file |
+| `sif.sifWeight` | `1.2` | Score multiplier for SIF results (0.0–2.0) |
+| `sif.builtinWeight` | `1.0` | Score multiplier for builtin results (0.0–2.0) |
+| `sif.maxResults` | `5` | Maximum SIF pointers returned per search |
+| `sif.minPointerWeight` | `0.15` | Minimum pointer weight to include |
+| `sif.includeBuiltin` | `true` | Whether to also search the builtin backend |
 
-```bash
-export SIF_GRAPH_PATH=/path/to/your/pointer-graph.json
+Environment variable: `SIF_GRAPH_PATH` overrides the default graph location.
+
+## Tools
+
+The plugin registers four agent tools:
+
+| Tool | Description |
+|------|-------------|
+| `sif_search` | Search the pointer graph by query, tags, or type |
+| `sif_add` | Add a new pointer (skill, knowledge, archetype, breakthrough, context) |
+| `sif_status` | Display graph health metrics and pointer distribution |
+| `sif_decay` | Run Hebbian decay cycle — strengthen accessed pointers, weaken dormant ones |
+
+## How It Works
+
+### Backend Mode (memory.backend = "sif")
+
+1. OpenClaw calls `SifMemoryManager.search(query)`
+2. SIF searches the pointer graph using tag/content matching with type-weighted scoring
+3. Builtin backend searches files + embeddings as usual
+4. Results merge by score — SIF pointers interleave with file chunks
+5. Agent sees unified results with SIF intelligence alongside code context
+
+### Plugin Mode (tools + hooks)
+
+1. `before_prompt_build` hook searches the graph using the user's prompt
+2. Matching pointers inject as system prompt context
+3. `llm_output` hook extracts learning signals from assistant responses
+4. Session lifecycle hooks persist state and archive transcripts
+
+### Pointer Types & Scoring
+
+| Type | Score Multiplier | Description |
+|------|-----------------|-------------|
+| `breakthrough` | 1.3× | Major insights that changed understanding |
+| `skill` | 1.2× | Learned capabilities and patterns |
+| `archetype` | 1.1× | Recurring problem/solution templates |
+| `knowledge` | 1.0× | Factual information and domain expertise |
+| `context` | 0.9× | Session state and working memory |
+
+### Hebbian Learning
+
+Pointers that get accessed strengthen (weight increases). Pointers that remain
+dormant decay over time. This mirrors biological memory consolidation — frequently
+useful intelligence persists while noise fades.
+
+## Files
+
+```
+plugins/sif-memory/
+├── index.ts               # Plugin entry — registration and wiring
+├── sif-memory-manager.ts  # MemorySearchManager implementation (Phase 2)
+├── pointer-graph.ts       # Core pointer graph data structure
+├── tools.ts               # Agent tools (sif_search, sif_add, etc.)
+├── hooks.ts               # Lifecycle hooks (prompt, learning, sessions)
+├── package.json           # Plugin metadata
+├── tsconfig.json          # TypeScript config
+└── README.md              # This file
+
+skills/sif-memory/
+└── SKILL.md               # Skill documentation for Claude Code
 ```
 
-Or in `openclaw.yaml`:
+## Core Modifications (Phase 2)
 
-```yaml
-plugins:
-  - id: sif-memory
-    config:
-      graphPath: "./my-sif-graph.json"
-```
+Phase 2 touches three OpenClaw core files to add `"sif"` as a memory backend:
 
-## Lifecycle Hooks
+| File | Change |
+|------|--------|
+| `src/config/types.memory.ts` | Add `"sif"` to `MemoryBackend` union, add `MemorySifConfig` type |
+| `src/memory/search-manager.ts` | Add SIF backend case with `SifMemoryManager` + fallback |
 
-The plugin automatically wires into seven OpenClaw lifecycle events:
+## Roadmap
 
-| Hook | Purpose |
-|------|---------|
-| `before_prompt_build` | Searches graph, injects relevant pointers as context |
-| `llm_output` | Scans responses for extractable insights/patterns |
-| `session_start` | Initializes session tracking |
-| `session_end` | Persists any dirty graph state |
-| `before_compaction` | Archives session transcript for cognitive archaeology |
-| `after_compaction` | Post-compaction bookkeeping |
-| `before_reset` | Saves state and archives before `/new` clears session |
-
-## Agent Tools
-
-Four tools are registered for explicit agent use:
-
-- **sif_recall** — Query the pointer graph for relevant accumulated intelligence
-- **sif_learn** — Store new insights, skills, patterns, or knowledge (auto-deduplicates)
-- **sif_reinforce** — Strengthen a pointer that proved useful (Hebbian learning)
-- **sif_status** — Check pointer count, type distribution, health score, sovereignty status
-
-## `/sif` Command
-
-Quick status from any chat channel:
-
-```
-/sif          # Summary status
-/sif health   # Detailed health report
-```
-
-## Pointer Types
-
-| Type | Description | Example |
-|------|-------------|---------|
-| `knowledge` | Facts, domain expertise | "OpenClaw uses SQLite-vec for vector storage" |
-| `skill` | Reusable capabilities | "Deploy MGMO minions for architecture analysis" |
-| `archetype` | Behavioral patterns | "User prefers comprehensive over quick-fix solutions" |
-| `breakthrough` | Novel insights | "SIF pointer graph enables Hebbian learning without retraining" |
-| `context` | Project metadata | "Kimera P-IV RT-qPCR platform is in clinical deployment" |
-
-## Roadmap (A35 Phases 2-5)
-
-- **Phase 2**: Deep memory integration — SIF as alternative memory backend
-- **Phase 3**: Provider interception — inject SIF context at the LLM call level
-- **Phase 4**: Agent personality — SIF-driven agent customization
-- **Phase 5**: Federation — multi-instance SIF graph synchronization
-
-## References
-
-- [SIF Knowledge Base](https://github.com/Dshamir/sif-knowledge-base)
-- [Amendment A35 — OpenClaw Integration Specification](https://github.com/Dshamir/sif-knowledge-base/blob/main/amendments/A35-OpenClaw-Integration.md)
-- [OpenClaw](https://github.com/openclaw/openclaw)
+- [x] Phase 1: Beachhead plugin (tools + hooks)
+- [x] Phase 2: Deep memory integration (MemorySearchManager backend)
+- [ ] Phase 3: Bidirectional learning (LLM ↔ pointer graph feedback loop)
+- [ ] Phase 4: Multi-agent pointer sharing (COSM integration)
+- [ ] Phase 5: Cognitive Archaeology pipeline (cross-platform intelligence extraction)
 
 ## License
 
-MIT — Nexless Healthcare LP
+Part of the Sovereign Intelligence Framework.
+See [Amendment A35](https://github.com/Dshamir/sif-knowledge-base) for specification.
