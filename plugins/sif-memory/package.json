@@ -1,0 +1,59 @@
+{
+  "name": "@sif/openclaw-plugin",
+  "version": "0.1.0",
+  "description": "Sovereign Intelligence Framework — portable, provider-agnostic intelligence layer for OpenClaw",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./pointer-graph": {
+      "import": "./dist/pointer-graph.js",
+      "types": "./dist/pointer-graph.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . --ext .ts"
+  },
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "sif",
+    "sovereign-intelligence",
+    "memory",
+    "pointer-graph",
+    "ai-memory",
+    "provider-agnostic"
+  ],
+  "author": "Daniel Shamir <daniel@nexless.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dshamir/openclaw.git",
+    "directory": "plugins/sif-memory"
+  },
+  "peerDependencies": {
+    "@sinclair/typebox": ">=0.32.0"
+  },
+  "devDependencies": {
+    "@sinclair/typebox": "^0.32.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "openclaw": {
+    "pluginId": "sif-memory",
+    "kind": "memory",
+    "emoji": "\ud83e\udde0",
+    "skillPath": "../../skills/sif-memory/SKILL.md"
+  }
+}
