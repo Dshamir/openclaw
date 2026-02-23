@@ -1,20 +1,27 @@
 /**
- * SIF Lifecycle Hooks (Phase 2)
+ * SIF Lifecycle Hooks (Phase 3)
  *
- * Wires SIF into OpenClaw's plugin hook system for automatic operation:
+ * Wires the full bidirectional learning loop into OpenClaw's hook system:
  *
  *   before_prompt_build → Injects relevant pointer context into system prompt
- *                         (SKIPPED when memory.backend = "sif" — manager handles it)
- *   llm_output          → Extracts learning signals from assistant responses
- *   session_start       → Initializes session tracking
- *   session_end         → Persists any dirty state
+ *                         (SKIPPED when memory.backend = "sif")
+ *   llm_output          → Tracks accessed pointers for co-activation
+ *   session_start       → Initializes session tracking + journal
+ *   session_end         → **FULL EXTRACTION PIPELINE** — analyzes conversation,
+ *                         extracts intelligence, writes to graph, runs Hebbian
  *   before_compaction   → Archives session transcript for cognitive archaeology
  *   after_compaction    → Post-compaction bookkeeping
  *   before_reset        → Saves state before /new or /reset clears session
+ *   heartbeat           → Periodic decay pass + consolidation
+ *
+ * @see Amendment A35 Phase 3 — Bidirectional Learning Loop
  */
 
 import type { OpenClawPluginApi } from "../../src/plugins/types.js";
 import type { PointerGraph } from "./pointer-graph.js";
+import type { HebbianEngine } from "./hebbian.js";
+import type { IntelligenceExtractor, ConversationTurn } from "./extractor.js";
+import type { LearningJournal } from "./learning-journal.js";
 import { readFileSync, appendFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
@@ -31,16 +38,37 @@ const MIN_CONTEXT_WEIGHT = 0.2;
 /** Session archive directory (relative to graph path) */
 const ARCHIVE_SUBDIR = "archives";
 
+/** Heartbeat counter for scheduling periodic tasks */
+let heartbeatCount = 0;
+
+/** Decay pass every N heartbeats (e.g., every ~30 min if heartbeat = 5min) */
+const DECAY_INTERVAL = 6;
+
+/** Full consolidation every N heartbeats (e.g., daily if heartbeat = 5min) */
+const CONSOLIDATION_INTERVAL = 288;
+
+// ---------------------------------------------------------------------------
+// Session State
+// ---------------------------------------------------------------------------
+
+/** Accumulates conversation turns for end-of-session extraction */
+const sessionTurns: ConversationTurn[] = [];
+
+/** Tracks pointer IDs accessed during this session for co-activation */
+const sessionAccessedPointers: Set<string> = new Set();
+
 // ---------------------------------------------------------------------------
 // Hook Registration
 // ---------------------------------------------------------------------------
 
-export function registerSifHooks(api: OpenClawPluginApi, graph: PointerGraph): void {
+export function registerSifHooks(
+  api: OpenClawPluginApi,
+  graph: PointerGraph,
+  hebbian?: HebbianEngine,
+  extractor?: IntelligenceExtractor,
+  journal?: LearningJournal,
+): void {
   const logger = api.logger;
-
-  // Detect if SIF is the configured memory backend.
-  // When backend = "sif", the SifMemoryManager handles search integration,
-  // so the before_prompt_build hook should NOT inject context (avoids double-injection).
   const sifIsBackend = (api.config as any)?.memory?.backend === "sif";
 
   // -------------------------------------------------------------------------
@@ -51,13 +79,20 @@ export function registerSifHooks(api: OpenClawPluginApi, graph: PointerGraph): v
       const prompt = event.prompt;
       if (!prompt || graph.size() === 0) return;
 
-      // Search the graph using the user's prompt as query
       const relevant = graph.search(prompt, MAX_CONTEXT_POINTERS);
       const eligible = relevant.filter((p) => p.weight >= MIN_CONTEXT_WEIGHT);
-
       if (eligible.length === 0) return;
 
-      // Build context block
+      // Track accessed pointers for co-activation
+      for (const p of eligible) {
+        sessionAccessedPointers.add(p.id);
+      }
+
+      // Reinforce accessed pointers via Hebbian engine
+      if (hebbian) {
+        hebbian.reinforceAccessed(graph, eligible.map((p) => p.id));
+      }
+
       const contextLines = eligible.map((p) => {
         return `[${p.type}|w:${p.weight.toFixed(2)}] ${p.content}`;
       });
@@ -75,47 +110,158 @@ export function registerSifHooks(api: OpenClawPluginApi, graph: PointerGraph): v
         `SIF: injecting ${eligible.length} pointers as context for prompt`
       );
 
-      return {
-        prependContext: sifContext,
-      };
+      return { prependContext: sifContext };
     }, { priority: 50 });
   } else {
     logger.info(
-      "SIF: memory.backend = 'sif' detected — skipping before_prompt_build hook " +
-      "(SifMemoryManager handles search integration)"
+      "SIF: memory.backend = 'sif' — skipping before_prompt_build hook"
     );
   }
 
   // -------------------------------------------------------------------------
-  // llm_output — Extract learning signals
+  // llm_output — Track conversation turns for extraction
   // -------------------------------------------------------------------------
   api.on("llm_output", (event, ctx) => {
     const texts = event.assistantTexts;
     if (!texts || texts.length === 0) return;
 
     const fullOutput = texts.join("\n");
-    if (fullOutput.length < 100) return;
+    if (fullOutput.length < 50) return;
 
-    extractLearningSignals(fullOutput, graph, logger, ctx.sessionKey);
+    // Accumulate turns for end-of-session extraction
+    sessionTurns.push({
+      role: "assistant",
+      content: fullOutput,
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // user_input — Track user messages for extraction
+  // -------------------------------------------------------------------------
+  api.on("user_input", (event, ctx) => {
+    const text = event.userText;
+    if (!text || text.length < 10) return;
+
+    sessionTurns.push({
+      role: "user",
+      content: text,
+      timestamp: new Date().toISOString(),
+    });
   });
 
   // -------------------------------------------------------------------------
   // session_start — Initialize tracking
   // -------------------------------------------------------------------------
   api.on("session_start", (event, ctx) => {
+    // Clear session state
+    sessionTurns.length = 0;
+    sessionAccessedPointers.clear();
+
+    // Set journal session
+    if (journal) {
+      journal.setSession(ctx.sessionId ?? ctx.sessionKey ?? "unknown");
+    }
+
     logger.debug?.(
       `SIF: session started — ${ctx.sessionId}, graph has ${graph.size()} pointers`
     );
   });
 
   // -------------------------------------------------------------------------
-  // session_end — Persist dirty state
+  // session_end — **FULL EXTRACTION PIPELINE**
   // -------------------------------------------------------------------------
   api.on("session_end", async (event, ctx) => {
+    const sessionKey = ctx.sessionId ?? ctx.sessionKey ?? "unknown";
+
+    // 1. Run intelligence extraction if we have enough turns
+    if (extractor && sessionTurns.length >= 3) {
+      journal?.logExtractionStart(sessionKey, sessionTurns.length);
+
+      try {
+        // Build LLM call function from the API if available
+        const llmCall = buildLlmCallFn(api);
+
+        const result = await extractor.extract(
+          [...sessionTurns], // Copy to avoid mutation
+          graph,
+          llmCall,
+          sessionKey,
+        );
+
+        journal?.logExtractionEnd(sessionKey, {
+          added: result.added,
+          reinforced: result.reinforced,
+          totalExtractions: result.extractions.length,
+        });
+
+        logger.info(
+          `SIF: session extraction complete — ` +
+          `${result.added} new, ${result.reinforced} reinforced ` +
+          `from ${result.extractions.length} extractions`
+        );
+      } catch (err) {
+        logger.warn(`SIF: extraction failed for session ${sessionKey}: ${err}`);
+      }
+    }
+
+    // 2. Reinforce all pointers accessed during this session
+    if (hebbian && sessionAccessedPointers.size > 0) {
+      const reinforced = hebbian.reinforceAccessed(
+        graph,
+        [...sessionAccessedPointers],
+      );
+      logger.debug?.(
+        `SIF: reinforced ${reinforced} pointers accessed during session`
+      );
+    }
+
+    // 3. Save graph
     if (graph.isDirty()) {
       logger.info(
-        `SIF: saving ${graph.size()} pointers at session end (${ctx.sessionId})`
+        `SIF: saving ${graph.size()} pointers at session end (${sessionKey})`
       );
+      await graph.save();
+    }
+
+    // 4. Clear session state
+    sessionTurns.length = 0;
+    sessionAccessedPointers.clear();
+    journal?.clearSession();
+  });
+
+  // -------------------------------------------------------------------------
+  // heartbeat — Periodic learning maintenance
+  // -------------------------------------------------------------------------
+  api.on("heartbeat", async (event, ctx) => {
+    heartbeatCount++;
+
+    // Decay pass (every ~30 min)
+    if (hebbian && heartbeatCount % DECAY_INTERVAL === 0) {
+      const decayResult = hebbian.decayPass(graph);
+      if (decayResult.decayed > 0 || decayResult.pruned > 0) {
+        journal?.logDecayPass(decayResult);
+        logger.debug?.(
+          `SIF heartbeat: decayed ${decayResult.decayed}, ` +
+          `pruned ${decayResult.pruned} pointers`
+        );
+      }
+    }
+
+    // Consolidation (daily)
+    if (hebbian && heartbeatCount % CONSOLIDATION_INTERVAL === 0) {
+      const consolidateResult = hebbian.consolidate(graph);
+      journal?.logConsolidation(consolidateResult);
+      logger.info(
+        `SIF heartbeat: consolidated — ` +
+        `merged ${consolidateResult.merged}, ` +
+        `co-activated ${consolidateResult.coActivated}, ` +
+        `pruned ${consolidateResult.pruned}`
+      );
+    }
+
+    // Save if dirty
+    if (graph.isDirty()) {
       await graph.save();
     }
   });
@@ -168,6 +314,22 @@ export function registerSifHooks(api: OpenClawPluginApi, graph: PointerGraph): v
   // before_reset — Save state before session clear
   // -------------------------------------------------------------------------
   api.on("before_reset", async (event, ctx) => {
+    // Run extraction before losing session data
+    if (extractor && sessionTurns.length >= 3) {
+      try {
+        const llmCall = buildLlmCallFn(api);
+        await extractor.extract(
+          [...sessionTurns],
+          graph,
+          llmCall,
+          ctx.sessionKey ?? "pre-reset",
+        );
+        logger.info("SIF: ran pre-reset extraction");
+      } catch (err) {
+        logger.warn(`SIF: pre-reset extraction failed: ${err}`);
+      }
+    }
+
     if (graph.isDirty()) {
       logger.info("SIF: saving pointer graph before session reset");
       await graph.save();
@@ -190,72 +352,41 @@ export function registerSifHooks(api: OpenClawPluginApi, graph: PointerGraph): v
         logger.warn(`SIF: failed to archive session before reset: ${err}`);
       }
     }
+
+    // Clear session state
+    sessionTurns.length = 0;
+    sessionAccessedPointers.clear();
   });
 }
 
 // ---------------------------------------------------------------------------
-// Learning Signal Extraction
+// LLM Call Builder
 // ---------------------------------------------------------------------------
 
 /**
- * Analyzes LLM output for patterns that indicate extractable intelligence.
- *
- * Conservative heuristic approach — looks for high-confidence signals.
- * False negatives preferred over false positives (noise degrades quality).
- *
- * Future: dedicated extraction prompt with lightweight model.
+ * Attempts to build an LLM call function from the plugin API.
+ * Returns undefined if the API doesn't expose an LLM call interface.
  */
-function extractLearningSignals(
-  output: string,
-  graph: PointerGraph,
-  logger: { info: (msg: string) => void; warn: (msg: string) => void; debug?: (msg: string) => void },
-  sessionKey?: string,
-): void {
-  // Pattern 1: Explicit "key insight" markers
-  const insightPatterns = [
-    /(?:key insight|important finding|notable discovery|breakthrough)[:\s]+(.{20,200})/gi,
-    /(?:the (?:main|key|critical|important) (?:takeaway|lesson|insight) (?:is|was))[:\s]+(.{20,200})/gi,
-  ];
-
-  for (const pattern of insightPatterns) {
-    const matches = output.matchAll(pattern);
-    for (const match of matches) {
-      const content = match[1]?.trim();
-      if (content && content.length >= 20) {
-        graph.add({
-          type: "knowledge",
-          content: cleanExtractedContent(content),
-          tags: ["auto-extracted", "llm-output"],
-          weight: 0.4,
-          source: `session:${sessionKey ?? "unknown"}`,
-        });
-        logger.debug?.(`SIF: auto-extracted insight from LLM output`);
-      }
-    }
+function buildLlmCallFn(
+  api: OpenClawPluginApi,
+): ((params: { systemPrompt: string; userPrompt: string; maxTokens?: number }) => Promise<string>) | undefined {
+  // OpenClaw exposes api.llm.complete() or similar — adapt as needed
+  const llm = (api as any).llm;
+  if (!llm || typeof llm.complete !== "function") {
+    return undefined;
   }
 
-  // Pattern 2: Explicit pattern/approach descriptions
-  const patternMarkers = [
-    /(?:the pattern (?:here|is)|a (?:good|better|effective) approach (?:is|would be))[:\s]+(.{20,200})/gi,
-    /(?:best practice|recommended approach|design pattern)[:\s]+(.{20,200})/gi,
-  ];
-
-  for (const pattern of patternMarkers) {
-    const matches = output.matchAll(pattern);
-    for (const match of matches) {
-      const content = match[1]?.trim();
-      if (content && content.length >= 20) {
-        graph.add({
-          type: "skill",
-          content: cleanExtractedContent(content),
-          tags: ["auto-extracted", "pattern", "llm-output"],
-          weight: 0.35,
-          source: `session:${sessionKey ?? "unknown"}`,
-        });
-        logger.debug?.(`SIF: auto-extracted pattern from LLM output`);
-      }
-    }
-  }
+  return async (params) => {
+    const response = await llm.complete({
+      messages: [
+        { role: "system", content: params.systemPrompt },
+        { role: "user", content: params.userPrompt },
+      ],
+      maxTokens: params.maxTokens ?? 2000,
+      temperature: 0.3, // Low temperature for structured extraction
+    });
+    return response.text ?? response.content ?? "";
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -265,12 +396,4 @@ function extractLearningSignals(
 function resolveArchiveDir(graph: PointerGraph): string {
   const status = graph.status();
   return join(dirname(status.graphPath), ARCHIVE_SUBDIR);
-}
-
-function cleanExtractedContent(raw: string): string {
-  return raw
-    .replace(/\*\*/g, "")
-    .replace(/\n+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }

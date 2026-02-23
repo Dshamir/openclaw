@@ -1,21 +1,38 @@
 /**
- * SIF Memory Plugin — Entry Point (Phase 2)
+ * SIF Memory Plugin — Entry Point (Phase 3)
  *
- * Registers the Sovereign Intelligence Framework as an OpenClaw plugin:
+ * Registers the Sovereign Intelligence Framework as an OpenClaw plugin
+ * with full bidirectional learning loop:
+ *
+ *   READ PATH:  Pointer graph → search → context injection → LLM
+ *   WRITE PATH:  LLM response → extraction → graph mutation → Hebbian update
+ *
+ * Components:
  *   - Tools: sif_search, sif_add, sif_status, sif_decay
- *   - Hooks: prompt injection, learning extraction, session lifecycle
+ *   - Hooks: prompt injection, conversation tracking, extraction, heartbeat
+ *   - Hebbian Engine: reinforce, decay, co-activate, consolidate
+ *   - Intelligence Extractor: LLM-powered PIK taxonomy extraction
+ *   - Learning Journal: append-only audit log of all mutations
  *   - Memory Backend: SifMemoryManager (when memory.backend = "sif")
  *
  * Configuration in openclaw.yaml:
  *
  *   memory:
- *     backend: sif        # Activates SIF as the memory backend
+ *     backend: sif
  *     sif:
  *       graphPath: ~/.sif/pointer-graph.yaml
- *       sifWeight: 1.2     # Boost SIF results in merged search
- *       builtinWeight: 1.0  # Standard weight for file-based results
- *       maxResults: 5       # Max SIF pointers per search
- *       includeBuiltin: true # Also search builtin file/embedding index
+ *       sifWeight: 1.2
+ *       builtinWeight: 1.0
+ *       maxResults: 5
+ *       includeBuiltin: true
+ *       hebbian:
+ *         reinforceBoost: 0.12
+ *         baseDecayRate: 0.02
+ *         coActivationBoost: 0.06
+ *       extraction:
+ *         useLlmExtraction: true
+ *         minConfidence: 0.5
+ *         maxExtractions: 10
  *
  * @see Amendment A35 — SIF-OpenClaw Integration
  */
@@ -25,6 +42,9 @@ import type {
   OpenClawPluginApi,
 } from "../../src/plugins/types.js";
 import { PointerGraph } from "./pointer-graph.js";
+import { HebbianEngine, DEFAULT_HEBBIAN_CONFIG } from "./hebbian.js";
+import { IntelligenceExtractor, DEFAULT_EXTRACTOR_CONFIG } from "./extractor.js";
+import { createJournal } from "./learning-journal.js";
 import { createSifTools } from "./tools.js";
 import { registerSifHooks } from "./hooks.js";
 
@@ -33,25 +53,70 @@ import { registerSifHooks } from "./hooks.js";
 // ---------------------------------------------------------------------------
 
 function resolveGraphPath(api: OpenClawPluginApi): string {
-  // 1. Plugin config
   const pluginConfig = api.pluginConfig as Record<string, unknown> | undefined;
   if (pluginConfig?.graphPath && typeof pluginConfig.graphPath === "string") {
     return pluginConfig.graphPath;
   }
 
-  // 2. SIF memory backend config
   const sifConfig = (api.config as any)?.memory?.sif;
   if (sifConfig?.graphPath && typeof sifConfig.graphPath === "string") {
     return sifConfig.graphPath;
   }
 
-  // 3. Environment variable
   const envPath = process.env.SIF_GRAPH_PATH;
   if (envPath) return envPath;
 
-  // 4. Default: ~/.sif/pointer-graph.yaml
   const home = process.env.HOME || process.env.USERPROFILE || ".";
   return `${home}/.sif/pointer-graph.yaml`;
+}
+
+// ---------------------------------------------------------------------------
+// Config Resolution
+// ---------------------------------------------------------------------------
+
+function resolveHebbianConfig(api: OpenClawPluginApi): typeof DEFAULT_HEBBIAN_CONFIG {
+  const sifConfig = (api.config as any)?.memory?.sif?.hebbian;
+  if (!sifConfig) return { ...DEFAULT_HEBBIAN_CONFIG };
+
+  return {
+    ...DEFAULT_HEBBIAN_CONFIG,
+    ...(sifConfig.reinforceBoost !== undefined && {
+      reinforceBoost: sifConfig.reinforceBoost,
+    }),
+    ...(sifConfig.baseDecayRate !== undefined && {
+      baseDecayRate: sifConfig.baseDecayRate,
+    }),
+    ...(sifConfig.coActivationBoost !== undefined && {
+      coActivationBoost: sifConfig.coActivationBoost,
+    }),
+    ...(sifConfig.pruneThreshold !== undefined && {
+      pruneThreshold: sifConfig.pruneThreshold,
+    }),
+    ...(sifConfig.mergeThreshold !== undefined && {
+      mergeThreshold: sifConfig.mergeThreshold,
+    }),
+  };
+}
+
+function resolveExtractorConfig(api: OpenClawPluginApi): typeof DEFAULT_EXTRACTOR_CONFIG {
+  const sifConfig = (api.config as any)?.memory?.sif?.extraction;
+  if (!sifConfig) return { ...DEFAULT_EXTRACTOR_CONFIG };
+
+  return {
+    ...DEFAULT_EXTRACTOR_CONFIG,
+    ...(sifConfig.useLlmExtraction !== undefined && {
+      useLlmExtraction: sifConfig.useLlmExtraction,
+    }),
+    ...(sifConfig.minConfidence !== undefined && {
+      minConfidence: sifConfig.minConfidence,
+    }),
+    ...(sifConfig.maxExtractions !== undefined && {
+      maxExtractions: sifConfig.maxExtractions,
+    }),
+    ...(sifConfig.minTurns !== undefined && {
+      minTurns: sifConfig.minTurns,
+    }),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -63,9 +128,9 @@ const sifMemoryPlugin: OpenClawPluginDefinition = {
   name: "SIF Memory",
   description:
     "Sovereign Intelligence Framework — portable pointer graph memory " +
-    "that persists skills, knowledge, archetypes, and breakthroughs across sessions. " +
-    "Phase 2: Deep memory integration as MemorySearchManager backend.",
-  version: "0.2.0",
+    "with Hebbian learning, LLM-powered extraction, and co-activation tracking. " +
+    "Phase 3: Full bidirectional learning loop.",
+  version: "0.3.0",
   kind: "memory",
 
   async register(api: OpenClawPluginApi) {
@@ -74,14 +139,17 @@ const sifMemoryPlugin: OpenClawPluginDefinition = {
     const isSifBackend = (api.config as any)?.memory?.backend === "sif";
 
     logger.info(
-      `SIF Memory v0.2.0 initializing — ` +
+      `SIF Memory v0.3.0 initializing — ` +
       `graph: ${graphPath}, ` +
-      `backend mode: ${isSifBackend ? "SIF (deep integration)" : "plugin-only (tools + hooks)"}`
+      `backend mode: ${isSifBackend ? "SIF (deep integration)" : "plugin-only"}`
     );
 
-    // Initialize the pointer graph
-    const graph = new PointerGraph(graphPath, logger);
+    // -----------------------------------------------------------------------
+    // Initialize components
+    // -----------------------------------------------------------------------
 
+    // 1. Pointer Graph
+    const graph = new PointerGraph(graphPath, logger);
     try {
       await graph.load();
       logger.info(
@@ -93,16 +161,46 @@ const sifMemoryPlugin: OpenClawPluginDefinition = {
       logger.warn(`SIF: failed to load graph, starting fresh: ${err}`);
     }
 
-    // Register tools (always available regardless of backend mode)
+    // 2. Learning Journal (audit log)
+    const journal = createJournal(graphPath);
+    logger.info(`SIF: journal initialized at ${journal.getStats().journalPath}`);
+
+    // 3. Hebbian Engine
+    const hebbianConfig = resolveHebbianConfig(api);
+    const hebbian = new HebbianEngine(hebbianConfig, journal);
+    logger.info(
+      `SIF: Hebbian engine initialized — ` +
+      `boost: ${hebbianConfig.reinforceBoost}, ` +
+      `decay: ${hebbianConfig.baseDecayRate}, ` +
+      `co-activation: ${hebbianConfig.coActivationBoost}`
+    );
+
+    // 4. Intelligence Extractor
+    const extractorConfig = resolveExtractorConfig(api);
+    const extractor = new IntelligenceExtractor(logger, extractorConfig, journal);
+    logger.info(
+      `SIF: extractor initialized — ` +
+      `LLM: ${extractorConfig.useLlmExtraction}, ` +
+      `minConfidence: ${extractorConfig.minConfidence}, ` +
+      `maxExtractions: ${extractorConfig.maxExtractions}`
+    );
+
+    // -----------------------------------------------------------------------
+    // Register tools (always available)
+    // -----------------------------------------------------------------------
     const tools = createSifTools(graph);
     for (const tool of tools) {
       api.registerTool(tool);
     }
 
-    // Register lifecycle hooks
-    registerSifHooks(api, graph);
+    // -----------------------------------------------------------------------
+    // Register lifecycle hooks (Phase 3 — full pipeline)
+    // -----------------------------------------------------------------------
+    registerSifHooks(api, graph, hebbian, extractor, journal);
 
+    // -----------------------------------------------------------------------
     // Register service for graceful shutdown
+    // -----------------------------------------------------------------------
     api.registerService({
       id: "sif-memory-persistence",
       async start(ctx) {
@@ -116,12 +214,21 @@ const sifMemoryPlugin: OpenClawPluginDefinition = {
       },
     });
 
+    // -----------------------------------------------------------------------
+    // Log Phase 3 status
+    // -----------------------------------------------------------------------
     if (isSifBackend) {
       logger.info(
-        "SIF: running as memory backend — search results will include " +
-        "pointer graph intelligence alongside file-based chunks"
+        "SIF: Phase 3 active — bidirectional learning loop enabled. " +
+        "Conversations will be extracted → graph → Hebbian → consolidate."
       );
     }
+
+    logger.info(
+      `SIF Memory v0.3.0 ready — ` +
+      `${graph.size()} pointers, ` +
+      `health: ${(graph.status().healthScore * 100).toFixed(0)}%`
+    );
   },
 };
 
