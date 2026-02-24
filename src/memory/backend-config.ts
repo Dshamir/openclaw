@@ -14,10 +14,18 @@ import type {
 import { resolveUserPath } from "../utils.js";
 import { splitShellArgs } from "../utils/shell-argv.js";
 
+export type ResolvedSifConfig = {
+  graphPath?: string;
+  maxContextPointers: number;
+  minContextWeight: number;
+  decayHalfLifeDays: number;
+};
+
 export type ResolvedMemoryBackendConfig = {
   backend: MemoryBackend;
   citations: MemoryCitationsMode;
   qmd?: ResolvedQmdConfig;
+  sif?: ResolvedSifConfig;
 };
 
 export type ResolvedQmdCollection = {
@@ -300,12 +308,19 @@ export function resolveMemoryBackendConfig(params: {
 }): ResolvedMemoryBackendConfig {
   const backend = params.cfg.memory?.backend ?? DEFAULT_BACKEND;
   const citations = params.cfg.memory?.citations ?? DEFAULT_CITATIONS;
-
-  // SIF backend — resolved by search-manager.ts, just pass through
   if (backend === "sif") {
-    return { backend: "sif", citations };
+    const sifCfg = params.cfg.memory?.sif;
+    return {
+      backend: "sif",
+      citations,
+      sif: {
+        graphPath: sifCfg?.graphPath,
+        maxContextPointers: sifCfg?.maxContextPointers ?? 8,
+        minContextWeight: sifCfg?.minContextWeight ?? 0.2,
+        decayHalfLifeDays: sifCfg?.decayHalfLifeDays ?? 30,
+      },
+    };
   }
-
   if (backend !== "qmd") {
     return { backend: "builtin", citations };
   }

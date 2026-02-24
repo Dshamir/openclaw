@@ -104,11 +104,21 @@ const MemoryQmdSchema = z
   })
   .strict();
 
+const MemorySifSchema = z
+  .object({
+    graphPath: z.string().optional(),
+    maxContextPointers: z.number().int().positive().optional(),
+    minContextWeight: z.number().min(0).max(1).optional(),
+    decayHalfLifeDays: z.number().positive().optional(),
+  })
+  .strict();
+
 const MemorySchema = z
   .object({
-    backend: z.union([z.literal("builtin"), z.literal("qmd")]).optional(),
+    backend: z.union([z.literal("builtin"), z.literal("qmd"), z.literal("sif")]).optional(),
     citations: z.union([z.literal("auto"), z.literal("on"), z.literal("off")]).optional(),
     qmd: MemoryQmdSchema.optional(),
+    sif: MemorySifSchema.optional(),
   })
   .strict()
   .optional();

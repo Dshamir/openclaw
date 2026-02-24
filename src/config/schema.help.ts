@@ -718,7 +718,7 @@ export const FIELD_HELP: Record<string, string> = {
     "Caches computed chunk embeddings in SQLite so reindexing and incremental updates run faster (default: true). Keep this enabled unless investigating cache correctness or minimizing disk usage.",
   memory: "Memory backend configuration (global).",
   "memory.backend":
-    'Selects the global memory engine: "builtin" uses OpenClaw memory internals, while "qmd" uses the QMD sidecar pipeline. Keep "builtin" unless you intentionally operate QMD.',
+    'Selects the global memory engine: "builtin" uses OpenClaw memory internals, "qmd" uses the QMD sidecar pipeline, and "sif" uses the SIF pointer-graph memory with Hebbian reinforcement. Keep "builtin" unless you intentionally operate QMD or SIF.',
   "memory.citations":
     'Controls citation visibility in replies: "auto" shows citations when useful, "on" always shows them, and "off" hides them. Keep "auto" for a balanced signal-to-noise default.',
   "memory.qmd.command":
@@ -775,6 +775,14 @@ export const FIELD_HELP: Record<string, string> = {
     "Sets per-query QMD search timeout in milliseconds (default: 4000). Increase for larger indexes or slower environments, and lower to keep request latency bounded.",
   "memory.qmd.scope":
     "Defines which sessions/channels are eligible for QMD recall using session.sendPolicy-style rules. Keep default direct-only scope unless you intentionally want cross-chat memory sharing.",
+  "memory.sif.graphPath":
+    "Overrides the default pointer-graph storage location for SIF memory. Use an absolute path or leave unset to use the default (~/.openclaw/sif/pointer-graph.json).",
+  "memory.sif.maxContextPointers":
+    "Sets how many SIF pointers are injected into agent context per turn (default: 8). Increase for broader recall, or lower to keep prompts tighter.",
+  "memory.sif.minContextWeight":
+    "Sets the minimum pointer weight required for context injection (default: 0.2). Increase to surface only well-reinforced knowledge, or lower to include weaker signals.",
+  "memory.sif.decayHalfLifeDays":
+    "Sets the base temporal decay half-life for pointer weights in days (default: 30). Shorter half-lives aggressively prune unused knowledge; longer values preserve it.",
   "agents.defaults.memorySearch.cache.maxEntries":
     "Sets a best-effort upper bound on cached embeddings kept in SQLite for memory search. Use this when controlling disk growth matters more than peak reindex speed.",
   "agents.defaults.memorySearch.sync.onSessionStart":

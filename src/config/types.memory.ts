@@ -4,6 +4,13 @@ export type MemoryBackend = "builtin" | "qmd" | "sif";
 export type MemoryCitationsMode = "auto" | "on" | "off";
 export type MemoryQmdSearchMode = "query" | "search" | "vsearch";
 
+export type MemorySifConfig = {
+  graphPath?: string;
+  maxContextPointers?: number;
+  minContextWeight?: number;
+  decayHalfLifeDays?: number;
+};
+
 export type MemoryConfig = {
   backend?: MemoryBackend;
   citations?: MemoryCitationsMode;
