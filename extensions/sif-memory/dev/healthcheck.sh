@@ -3,19 +3,14 @@
 # Used by Docker HEALTHCHECK instruction
 set -euo pipefail
 
-# 1. Gateway HTTP check — verify the gateway is serving
-if command -v curl >/dev/null 2>&1; then
-  curl -sf --max-time 3 http://localhost:18789/_bootstrap.json >/dev/null || exit 1
-else
-  node -e "
-    const http = require('http');
-    const req = http.get('http://localhost:18789/_bootstrap.json', { timeout: 3000 }, (res) => {
-      process.exit(res.statusCode >= 200 && res.statusCode < 400 ? 0 : 1);
-    });
-    req.on('error', () => process.exit(1));
-    req.on('timeout', () => { req.destroy(); process.exit(1); });
-  " || exit 1
-fi
+# 1. Gateway TCP check — verify the gateway port is listening
+node -e "
+  const net = require('net');
+  const socket = net.createConnection({ host: '127.0.0.1', port: 18789 });
+  const timeout = setTimeout(() => { socket.destroy(); process.exit(1); }, 3000);
+  socket.on('connect', () => { clearTimeout(timeout); socket.end(); process.exit(0); });
+  socket.on('error', () => { clearTimeout(timeout); process.exit(1); });
+" || exit 1
 
 # 2. SIF graph file exists and is valid JSON
 GRAPH_PATH="/home/node/.openclaw/sif/pointer-graph.json"

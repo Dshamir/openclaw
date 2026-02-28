@@ -15,7 +15,11 @@ LABEL sifdev.built-at="${BUILD_DATE}"
 USER root
 
 # Copy SIF extension into the image (overwrites any version from base build)
+# Fix permissions: WSL2/Windows mounts show mode=777 which triggers the
+# plugin security check ("world-writable path" rejection). Force 755/644.
 COPY --chown=node:node extensions/sif-memory/ /app/extensions/sif-memory/
+RUN find /app/extensions/sif-memory -type d -exec chmod 755 {} + && \
+    find /app/extensions/sif-memory -type f -exec chmod 644 {} +
 
 # Pre-configure memory.backend=sif
 RUN mkdir -p /home/node/.openclaw/sif && \
