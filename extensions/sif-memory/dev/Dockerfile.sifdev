@@ -21,10 +21,10 @@ COPY --chown=node:node extensions/sif-memory/ /app/extensions/sif-memory/
 RUN find /app/extensions/sif-memory -type d -exec chmod 755 {} + && \
     find /app/extensions/sif-memory -type f -exec chmod 644 {} +
 
-# Pre-configure memory.backend=sif
+# Pre-configure memory.backend=sif + skip device pairing for Control UI (dev only)
 RUN mkdir -p /home/node/.openclaw/sif && \
     chown -R node:node /home/node/.openclaw && \
-    echo '{"memory":{"backend":"sif"}}' > /home/node/.openclaw/openclaw.json && \
+    echo '{"memory":{"backend":"sif"},"gateway":{"controlUi":{"dangerouslyDisableDeviceAuth":true}},"plugins":{"enabled":true,"allow":["sif-memory"],"slots":{"memory":"sif-memory"}}}' > /home/node/.openclaw/openclaw.json && \
     chown node:node /home/node/.openclaw/openclaw.json
 
 # Install healthcheck script

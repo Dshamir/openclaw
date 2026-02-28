@@ -156,12 +156,12 @@ cmd_launch() {
   ok "Container started"
 
   # Wait for health
-  if wait_healthy 30; then
+  if wait_healthy 60; then
     local port="${SIFDEV_PORT:-18789}"
     echo ""
     ok "SIF dev environment is ready!"
     echo "  ${BOLD}Gateway:${RESET}  http://localhost:${port}"
-    echo "  ${BOLD}Web UI:${RESET}   http://localhost:${port}/ui/"
+    echo "  ${BOLD}Web UI:${RESET}   http://localhost:${port}/overview"
     [ "$dev_mode" = "1" ] && echo "  ${BOLD}Mode:${RESET}     DEV (hot-reload, restart to pick up changes)"
     echo ""
   else
@@ -470,7 +470,7 @@ cmd_restore() {
 
   # Restart and verify
   compose_cmd restart
-  if wait_healthy 30; then
+  if wait_healthy 60; then
     ok "Restore complete and healthy"
   else
     warn "Restore complete but health check did not pass"
@@ -613,7 +613,7 @@ ${BOLD}Volume Paths:${RESET}
   Config:      /home/node/.openclaw/openclaw.json
 
 ${BOLD}URLs:${RESET}
-  Web UI:      http://localhost:${port}/ui/
+  Web UI:      http://localhost:${port}/overview
   Gateway WS:  ws://localhost:${port}
 
 ${BOLD}Docs:${RESET}

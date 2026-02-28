@@ -7,6 +7,7 @@ services:
       TERM: xterm-256color
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      NODE_OPTIONS: "--max-old-space-size=1536"
       OPENCLAW_SKIP_CHANNELS: "1"
       OPENCLAW_SKIP_CRON: "1"
       OPENCLAW_SKIP_CANVAS_HOST: "1"
@@ -16,7 +17,7 @@ services:
       - "${SIFDEV_PORT:-18789}:18789"
     init: true
     restart: unless-stopped
-    mem_limit: ${SIFDEV_MEM_LIMIT:-512m}
+    mem_limit: ${SIFDEV_MEM_LIMIT:-1g}
     healthcheck:
       test: ["CMD", "/app/healthcheck.sh"]
       interval: 30s
