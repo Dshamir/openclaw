@@ -1,0 +1,40 @@
+# SIF Memory Dev Layer
+# Builds on top of openclaw:local base image
+#
+# Build:
+#   docker build -t openclaw-sifdev:local \
+#     -f extensions/sif-memory/dev/Dockerfile.sifdev .
+# (context = repo root)
+
+FROM openclaw:local
+
+LABEL sifdev.component="sif-memory"
+ARG BUILD_DATE=""
+LABEL sifdev.built-at="${BUILD_DATE}"
+
+USER root
+
+# Copy SIF extension into the image (overwrites any version from base build)
+COPY --chown=node:node extensions/sif-memory/ /app/extensions/sif-memory/
+
+# Pre-configure memory.backend=sif
+RUN mkdir -p /home/node/.openclaw/sif && \
+    chown -R node:node /home/node/.openclaw && \
+    echo '{"memory":{"backend":"sif"}}' > /home/node/.openclaw/openclaw.json && \
+    chown node:node /home/node/.openclaw/openclaw.json
+
+# Install healthcheck script
+COPY --chown=node:node extensions/sif-memory/dev/healthcheck.sh /app/healthcheck.sh
+RUN chmod +x /app/healthcheck.sh
+
+USER node
+
+# Persist the SIF graph data across container restarts
+VOLUME /home/node/.openclaw/sif
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD ["/app/healthcheck.sh"]
+
+EXPOSE 18789
+
+CMD ["node", "openclaw.mjs", "gateway", "--bind", "lan", "--port", "18789", "--allow-unconfigured"]
