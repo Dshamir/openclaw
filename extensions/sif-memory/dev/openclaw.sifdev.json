@@ -1,0 +1,22 @@
+{
+  "memory": {
+    "backend": "sif"
+  },
+  "gateway": {
+    "controlUi": {
+      "dangerouslyDisableDeviceAuth": true
+    }
+  },
+  "agents": {
+    "defaults": {
+      "timeout": 1800
+    }
+  },
+  "plugins": {
+    "enabled": true,
+    "allow": ["sif-memory"],
+    "slots": {
+      "memory": "sif-memory"
+    }
+  }
+}

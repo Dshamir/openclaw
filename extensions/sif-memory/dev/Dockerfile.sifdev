@@ -31,10 +31,12 @@ RUN find /app/skills -type d -exec chmod 755 {} + && \
     find /app/skills -type f -exec chmod 644 {} +
 
 # Pre-configure memory.backend=sif + skip device pairing for Control UI (dev only)
+# Baked as a standalone file so `config set` merges cleanly and shell escaping
+# cannot mangle the JSON.  agents.defaults.timeout=1800 (30 min) prevents the
+# gateway from aborting long SIF-heavy agent runs (default was 600s / 10 min).
 RUN mkdir -p /home/node/.openclaw/sif && \
-    chown -R node:node /home/node/.openclaw && \
-    echo '{"memory":{"backend":"sif"},"gateway":{"controlUi":{"dangerouslyDisableDeviceAuth":true}},"plugins":{"enabled":true,"allow":["sif-memory"],"slots":{"memory":"sif-memory"}}}' > /home/node/.openclaw/openclaw.json && \
-    chown node:node /home/node/.openclaw/openclaw.json
+    chown -R node:node /home/node/.openclaw
+COPY --chown=node:node extensions/sif-memory/dev/openclaw.sifdev.json /home/node/.openclaw/openclaw.json
 
 # Install healthcheck script
 COPY --chown=node:node extensions/sif-memory/dev/healthcheck.sh /app/healthcheck.sh
