@@ -19,6 +19,10 @@ BACKUP_DIR="$SIFDEV_DIR/backups"
 WATCHDOG_PID_FILE="$SIFDEV_DIR/.watchdog.pid"
 WATCHDOG_LOG="$SIFDEV_DIR/watchdog.log"
 
+# SIF knowledge base skills (external repo, staged into build context)
+SIF_KB_SKILLS="${SIF_KB_SKILLS:-$(cd "$REPO_ROOT/.." && pwd)/sif-knowledge-base/skills}"
+SIF_SKILLS_STAGE="$SIFDEV_DIR/.sif-skills"
+
 # Compose override for dev hot-reload mode
 COMPOSE_DEV_OVERRIDE="$SIFDEV_DIR/.docker-compose.dev-override.yml"
 
@@ -89,6 +93,22 @@ services:
 YAML
 }
 
+# Stage SIF skills from the knowledge base repo into the build context
+stage_sif_skills() {
+  if [ -d "$SIF_KB_SKILLS" ]; then
+    info "Staging SIF skills from $SIF_KB_SKILLS..."
+    rm -rf "$SIF_SKILLS_STAGE"
+    cp -r "$SIF_KB_SKILLS" "$SIF_SKILLS_STAGE"
+    local count
+    count=$(find "$SIF_SKILLS_STAGE" -name "SKILL.md" | wc -l)
+    ok "Staged $count SIF skills"
+  else
+    warn "SIF knowledge base skills not found at $SIF_KB_SKILLS"
+    warn "Set SIF_KB_SKILLS env var to override. Proceeding without SIF skills."
+    mkdir -p "$SIF_SKILLS_STAGE"
+  fi
+}
+
 # Wait for health check to pass (up to $1 seconds, default 30)
 wait_healthy() {
   local timeout="${1:-30}"
@@ -134,6 +154,9 @@ cmd_launch() {
     docker build -t "$IMAGE_BASE" -f "$REPO_ROOT/Dockerfile" "$REPO_ROOT"
     ok "Base image built"
   fi
+
+  # Stage SIF skills into build context
+  stage_sif_skills
 
   # Build SIF layer
   info "Building SIF dev image..."
@@ -197,6 +220,9 @@ cmd_rebuild() {
   done
 
   require_docker
+
+  # Stage SIF skills into build context
+  stage_sif_skills
 
   if [ "$sif_only" = "1" ]; then
     info "Rebuilding SIF layer only..."

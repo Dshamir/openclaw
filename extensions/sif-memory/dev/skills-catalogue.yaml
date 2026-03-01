@@ -1,0 +1,2068 @@
+# SIF Skills Catalogue v3.0 — Active Routing Index
+# Integrates with: MGMO v3 (IRON DOCTRINE) + Skill Router v4 (PATHFINDER)
+# Last updated: 2026-02-28
+# Total skills: 150 (58 Anthropic built-in + 92 SIF-generated)
+
+version: "3.0"
+updated: "2026-02-28"
+total_skills: 150
+schema_version: "3.0"
+
+# ============================================================
+# SCHEMA v3 ADDITIONS (vs v2):
+#   - triggers: phrase matches for Skill Router (weight: 0.35)
+#   - keywords: term matches for Skill Router (weight: 0.25)
+#   - mos_code: MGMO v3 Military Occupational Specialty
+#   - phase_affinity: preferred MGMO v3 execution phases
+#   - dependencies: skill → skill dependency declarations
+#   - fetchable: can be auto-fetched from SIF Knowledge Base
+#   - source: "local" (in /mnt/skills/) or "sif-kb" (GitHub only)
+# ============================================================
+
+# ────────────────────────────────────────────────────────────
+# SECTION 1: ANTHROPIC BUILT-IN SKILLS (58)
+# Source: local (/mnt/skills/skills/)
+# Activation: Automatically available in Cowork/Claude Code
+# ────────────────────────────────────────────────────────────
+
+anthropic_builtin:
+  count: 58
+  source: local
+  base_path: "/mnt/skills/skills"
+
+  # ── Document Creation ──────────────────────────────────────
+  document_creation:
+    - id: docx
+      name: "Word Document Handler"
+      lines: 591
+      categories: [document]
+      triggers: ["word document", "docx", "report", "letter", "memo", "manuscript"]
+      keywords: [word, document, docx, report, letter, memo, essay, paper, writeup]
+      mos_code: "42A"
+      phase_affinity: [6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: pptx
+      name: "PowerPoint Suite"
+      lines: 233
+      categories: [document, design]
+      triggers: ["presentation", "powerpoint", "slides", "slide deck", "pitch deck"]
+      keywords: [pptx, slides, presentation, deck, slideshow, powerpoint]
+      mos_code: "42A"
+      phase_affinity: [6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: xlsx
+      name: "Excel Spreadsheet Handler"
+      lines: 292
+      categories: [document, analysis]
+      triggers: ["spreadsheet", "excel", "data table", "budget", "financial model"]
+      keywords: [xlsx, spreadsheet, excel, formula, chart, pivot, data]
+      mos_code: "42A"
+      phase_affinity: [6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: pdf
+      name: "PDF Processing"
+      lines: 315
+      categories: [document]
+      triggers: ["PDF", "form", "extract PDF", "merge PDF", "split PDF"]
+      keywords: [pdf, form, extract, merge, split, fillable]
+      mos_code: "42A"
+      phase_affinity: [6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+  # ── Design & Creative ──────────────────────────────────────
+  design_creative:
+    - id: canvas-design
+      name: "Canvas Design"
+      lines: 130
+      categories: [design]
+      triggers: ["create a poster", "visual design", "artwork", "static design"]
+      keywords: [poster, art, design, visual, canvas, png]
+      mos_code: "46R"
+      phase_affinity: [4, 6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: algorithmic-art
+      name: "Algorithmic Art"
+      lines: 405
+      categories: [design, development]
+      triggers: ["generative art", "algorithmic art", "flow fields", "particle systems"]
+      keywords: [p5js, generative, algorithmic, art, particles, flow]
+      mos_code: "46R"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: brand-guidelines
+      name: "Anthropic Brand Guidelines"
+      lines: 74
+      categories: [design]
+      triggers: ["anthropic brand", "brand colors", "brand guidelines"]
+      keywords: [brand, anthropic, colors, typography, guidelines]
+      mos_code: "46R"
+      phase_affinity: [4, 6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: theme-factory
+      name: "Theme Factory"
+      lines: 60
+      categories: [design]
+      triggers: ["theme", "styling", "apply theme"]
+      keywords: [theme, style, colors, fonts, preset]
+      mos_code: "46R"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: slack-gif-creator
+      name: "Slack GIF Creator"
+      lines: 255
+      categories: [design, communication]
+      triggers: ["slack gif", "animated GIF", "make a GIF"]
+      keywords: [gif, slack, animation, animated]
+      mos_code: "46R"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: web-artifacts-builder
+      name: "Web Artifacts Builder"
+      lines: 74
+      categories: [design, development]
+      triggers: ["web artifact", "react component", "complex HTML artifact"]
+      keywords: [react, artifact, component, shadcn, tailwind]
+      mos_code: "46R"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+  # ── AI / ML ────────────────────────────────────────────────
+  ai_ml:
+    - id: multi-provider-ai
+      name: "Multi-Provider AI"
+      lines: 382
+      categories: [ai_ml]
+      triggers: ["multi-LLM", "provider failover", "avoid vendor lock-in", "LLM abstraction"]
+      keywords: [llm, provider, failover, openai, anthropic, abstraction, routing]
+      mos_code: "FA26"
+      phase_affinity: [3, 4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: guard-rails
+      name: "AI Guard Rails"
+      lines: 319
+      categories: [ai_ml, security]
+      triggers: ["AI safety", "content moderation", "PII detection", "hallucination prevention"]
+      keywords: [safety, guardrails, pii, moderation, validation, hallucination]
+      mos_code: "FA26"
+      phase_affinity: [3, 5]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: hybrid-search
+      name: "Hybrid Search"
+      lines: 285
+      categories: [ai_ml, analysis]
+      triggers: ["RAG pipeline", "hybrid search", "vector search", "search quality"]
+      keywords: [rag, vector, bm25, search, embedding, retrieval, rrf]
+      mos_code: "35G"
+      phase_affinity: [3, 4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: audit-first-ai
+      name: "Audit-First AI"
+      lines: 412
+      categories: [ai_ml, security]
+      triggers: ["HIPAA", "SOC2", "GDPR", "audit trail", "compliance-first"]
+      keywords: [hipaa, soc2, gdpr, audit, compliance, logging, regulated]
+      mos_code: "27D"
+      phase_affinity: [3, 5]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: genesis-ai-ml
+      name: "Genesis AI/ML"
+      lines: 398
+      categories: [ai_ml, bootstrap]
+      triggers: ["LLM application", "RAG development", "AI agent", "embedding pipeline"]
+      keywords: [llm, rag, embedding, vector, agent, ai, ml, prompt]
+      mos_code: "FA26"
+      phase_affinity: [3]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: genesis-avatar
+      name: "Genesis Avatar"
+      lines: 390
+      categories: [avatar, ai_ml]
+      triggers: ["digital avatar", "video AI", "lip-sync", "Tavus", "Simli", "HeyGen"]
+      keywords: [avatar, tavus, simli, heygen, lipsync, livekit, video]
+      mos_code: "FA49"
+      phase_affinity: [3]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: ai-workflow-prompt-engineering
+      name: "AI Workflow Prompt Engineering"
+      lines: 322
+      categories: [ai_ml, planning]
+      triggers: ["prompt engineering", "AI workflow", "agent design", "prompt chain"]
+      keywords: [prompt, workflow, agent, chain, optimize, engineering]
+      mos_code: "37F"
+      phase_affinity: [2, 3]
+      dependencies: []
+      fetchable: false
+      source: local
+
+  # ── Healthcare ─────────────────────────────────────────────
+  healthcare:
+    - id: genesis-healthcare
+      name: "Genesis Healthcare"
+      lines: 265
+      categories: [healthcare, bootstrap]
+      triggers: ["HIPAA requirements", "FHIR API", "PHI handling", "medical device", "healthcare SaaS"]
+      keywords: [hipaa, fhir, phi, healthcare, medical, patient, ehr]
+      mos_code: "56M"
+      phase_affinity: [3]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: healthcare-integration-engine
+      name: "Healthcare Integration Engine"
+      lines: 285
+      categories: [healthcare, integration]
+      triggers: ["healthcare integration", "HL7", "FHIR", "DICOM", "Qvera", "Mirth"]
+      keywords: [hl7, fhir, dicom, qvera, mirth, interoperability, x12]
+      mos_code: "56M"
+      phase_affinity: [3, 4]
+      dependencies: [genesis-healthcare]
+      fetchable: false
+      source: local
+
+    - id: avatar-platform-architect
+      name: "Avatar Platform Architect"
+      lines: 309
+      categories: [avatar, healthcare]
+      triggers: ["avatar provider evaluation", "avatar pipeline", "Shadow Mode", "medical avatar"]
+      keywords: [avatar, tavus, simli, heygen, pipeline, shadow, motion]
+      mos_code: "FA49"
+      phase_affinity: [3, 4]
+      dependencies: [genesis-avatar]
+      fetchable: false
+      source: local
+
+  # ── Networking & Infrastructure ────────────────────────────
+  networking_infrastructure:
+    - id: nat-traversal-stun-turn
+      name: "NAT Traversal STUN/TURN"
+      lines: 507
+      categories: [networking]
+      triggers: ["NAT traversal", "STUN", "TURN", "ICE", "hole punching", "coturn"]
+      keywords: [nat, stun, turn, ice, hole, punching, coturn, p2p]
+      mos_code: "94E"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: quic-transport-layer
+      name: "QUIC Transport Layer"
+      lines: 365
+      categories: [networking]
+      triggers: ["QUIC", "quinn", "low-latency", "multiplexed transport", "WebTransport"]
+      keywords: [quic, quinn, transport, udp, multiplex, latency]
+      mos_code: "94E"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: vfs-fuse-dokan
+      name: "VFS FUSE/Dokan"
+      lines: 829
+      categories: [infrastructure, networking]
+      triggers: ["virtual filesystem", "FUSE", "Dokan", "mount drive", "network filesystem"]
+      keywords: [vfs, fuse, dokan, mount, filesystem, remote, drive]
+      mos_code: "94F"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: rust-server-development
+      name: "Rust Server Development"
+      lines: 465
+      categories: [development, networking]
+      triggers: ["Rust server", "tokio server", "async server", "signaling server"]
+      keywords: [rust, tokio, tower, prost, sqlx, async, server]
+      mos_code: "11B"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: protobuf-protocol-design
+      name: "Protobuf Protocol Design"
+      lines: 492
+      categories: [development, networking]
+      triggers: ["protobuf", "proto file", "wire protocol", "signaling protocol"]
+      keywords: [protobuf, proto, protocol, prost, grpc, wire, message]
+      mos_code: "25S"
+      phase_affinity: [2, 4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: tauri-desktop-app
+      name: "Tauri Desktop App"
+      lines: 604
+      categories: [development, infrastructure]
+      triggers: ["Tauri app", "desktop app", "system tray", "cross-platform desktop"]
+      keywords: [tauri, desktop, tray, daemon, cross-platform, electron]
+      mos_code: "94F"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+  # ── SaaS & Frontend ────────────────────────────────────────
+  saas_frontend:
+    - id: nextjs-saas-dashboard
+      name: "Next.js SaaS Dashboard"
+      lines: 569
+      categories: [development, planning]
+      triggers: ["Next.js dashboard", "SaaS dashboard", "Stripe subscription", "shadcn"]
+      keywords: [nextjs, saas, dashboard, stripe, prisma, shadcn, server-actions]
+      mos_code: "FA57"
+      phase_affinity: [2, 4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: bootstrap-admin-console
+      name: "Bootstrap Admin Console"
+      lines: 672
+      categories: [development, design]
+      triggers: ["admin console", "admin panel", "AdminLTE", "Tabler", "internal tools"]
+      keywords: [admin, console, panel, adminlte, tabler, bootstrap, crud]
+      mos_code: "FA57"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: saas-app-planning
+      name: "SaaS App Planning"
+      lines: 273
+      categories: [planning]
+      triggers: ["SaaS product", "application sitemap", "product vision", "MVP features"]
+      keywords: [saas, app, planning, sitemap, mvp, stack, architecture]
+      mos_code: "FA57"
+      phase_affinity: [2]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: v0dev-prompt-optimizer
+      name: "v0.dev Prompt Optimizer"
+      lines: 259
+      categories: [design, ai_ml]
+      triggers: ["v0.dev", "v0 prompt", "generate UI", "distinctive design"]
+      keywords: [v0, prompt, ui, component, design, distinctive]
+      mos_code: "46R"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+  # ── n8n Workflow ───────────────────────────────────────────
+  n8n_workflow:
+    - id: n8n-custom-nodes
+      name: "n8n Custom Nodes"
+      lines: 220
+      categories: [development, integration]
+      triggers: ["n8n node", "n8n integration", "custom workflow node", "INodeType"]
+      keywords: [n8n, node, workflow, integration, credential]
+      mos_code: "25S"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: n8n-binary-data
+      name: "n8n Binary Data"
+      lines: 261
+      categories: [development, integration]
+      triggers: ["n8n file handling", "binary data workflow", "prepareBinaryData"]
+      keywords: [n8n, binary, file, upload, download, buffer]
+      mos_code: "25S"
+      phase_affinity: [4]
+      dependencies: [n8n-custom-nodes]
+      fetchable: false
+      source: local
+
+    - id: n8n-execution-context
+      name: "n8n Execution Context"
+      lines: 245
+      categories: [development, integration]
+      triggers: ["IExecuteFunctions", "getNodeParameter", "execution context n8n"]
+      keywords: [n8n, execution, context, parameter, credential, helpers]
+      mos_code: "25S"
+      phase_affinity: [4]
+      dependencies: [n8n-custom-nodes]
+      fetchable: false
+      source: local
+
+    - id: n8n-langchain-integration
+      name: "n8n LangChain Integration"
+      lines: 196
+      categories: [ai_ml, integration]
+      triggers: ["n8n AI node", "LangChain n8n", "RAG workflow", "AI agent workflow"]
+      keywords: [n8n, langchain, rag, vector, embedding, agent, ai]
+      mos_code: "FA26"
+      phase_affinity: [3, 4]
+      dependencies: [n8n-custom-nodes]
+      fetchable: false
+      source: local
+
+    - id: n8n-mcp-tools
+      name: "n8n MCP Tools"
+      lines: 226
+      categories: [integration, ai_ml]
+      triggers: ["MCP server n8n", "n8n MCP tool", "expose workflow as tool"]
+      keywords: [n8n, mcp, tool, server, agent, claude]
+      mos_code: "25S"
+      phase_affinity: [4]
+      dependencies: [n8n-custom-nodes]
+      fetchable: false
+      source: local
+
+    - id: n8n-testing-patterns
+      name: "n8n Testing Patterns"
+      lines: 247
+      categories: [development]
+      triggers: ["n8n node test", "mock IExecuteFunctions", "nock API mock"]
+      keywords: [n8n, test, jest, mock, nock, fixture]
+      mos_code: "17C"
+      phase_affinity: [5]
+      dependencies: [n8n-custom-nodes]
+      fetchable: false
+      source: local
+
+    - id: n8n-vue3-design-system
+      name: "n8n Vue3 Design System"
+      lines: 306
+      categories: [design, development]
+      triggers: ["Vue 3 design system", "component library", "design tokens", "Storybook Vue"]
+      keywords: [vue, design, system, storybook, component, token, n8n]
+      mos_code: "46R"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: n8n-workflow-graph
+      name: "n8n Workflow Graph"
+      lines: 158
+      categories: [development, integration]
+      triggers: ["workflow connections", "parent nodes", "getParentNodes", "node dependencies"]
+      keywords: [n8n, workflow, graph, connection, parent, child, traverse]
+      mos_code: "25S"
+      phase_affinity: [4]
+      dependencies: [n8n-custom-nodes]
+      fetchable: false
+      source: local
+
+  # ── Business & Strategy ────────────────────────────────────
+  business_strategy:
+    - id: enterprise-business-plan
+      name: "Enterprise Business Plan"
+      lines: 195
+      categories: [planning, document]
+      triggers: ["business plan", "investor deck", "pitch document", "funding document"]
+      keywords: [business, plan, investor, pitch, tam, sam, som, blue-ocean]
+      mos_code: "36B"
+      phase_affinity: [2, 6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: enterprise-prd-generator
+      name: "Enterprise PRD Generator"
+      lines: 195
+      categories: [planning]
+      triggers: ["PRD", "product requirements", "sprint planning", "user stories"]
+      keywords: [prd, requirements, sprint, story, acceptance, criteria, phased]
+      mos_code: "FA57"
+      phase_affinity: [2]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: investor-pitch-deck-metrics
+      name: "Investor Pitch Deck Metrics"
+      lines: 779
+      categories: [planning, document]
+      triggers: ["investor pitch", "TAM SAM SOM", "unit economics", "financial model"]
+      keywords: [investor, pitch, tam, sam, som, unit, economics, financial, tco]
+      mos_code: "36B"
+      phase_affinity: [2, 6]
+      dependencies: [pptx]
+      fetchable: false
+      source: local
+
+    - id: pitch-deck-creator
+      name: "Pitch Deck Creator"
+      lines: 164
+      categories: [planning, document]
+      triggers: ["pitch deck", "startup deck", "investor presentation", "Series A"]
+      keywords: [pitch, deck, startup, investor, series, fundraising]
+      mos_code: "46R"
+      phase_affinity: [6]
+      dependencies: [pptx]
+      fetchable: false
+      source: local
+
+    - id: strategic-document-calibration
+      name: "Strategic Document Calibration"
+      lines: 205
+      categories: [planning, communication]
+      triggers: ["calibrate tone", "stakeholder communication", "executive deck", "diplomatic framing"]
+      keywords: [calibrate, tone, strategic, stakeholder, diplomatic, executive]
+      mos_code: "37F"
+      phase_affinity: [2, 6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: cybersecurity-document-creation
+      name: "Cybersecurity Document Creation"
+      lines: 312
+      categories: [security, document]
+      triggers: ["security plan", "incident response", "phishing analysis", "NIST framework"]
+      keywords: [cybersecurity, security, incident, phishing, nist, threat, policy]
+      mos_code: "17C"
+      phase_affinity: [3, 5, 6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+  # ── Development ────────────────────────────────────────────
+  development:
+    - id: code-development-debugging
+      name: "Code Development & Debugging"
+      lines: 230
+      categories: [development]
+      triggers: ["write code", "fix code", "debug", "Python program", "refactor"]
+      keywords: [code, python, debug, fix, refactor, script, program]
+      mos_code: "11B"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: typescript-strict-monorepo
+      name: "TypeScript Strict Monorepo"
+      lines: 218
+      categories: [development, infrastructure]
+      triggers: ["pnpm workspace", "turbo monorepo", "TypeScript strict", "shared packages"]
+      keywords: [typescript, monorepo, pnpm, turbo, strict, workspace]
+      mos_code: "74D"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: mcp-builder
+      name: "MCP Builder"
+      lines: 237
+      categories: [development, integration]
+      triggers: ["MCP server", "build MCP", "FastMCP", "MCP SDK"]
+      keywords: [mcp, server, protocol, fastmcp, sdk, tool]
+      mos_code: "12B"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: data-analysis-investigation
+      name: "Data Analysis Investigation"
+      lines: 195
+      categories: [analysis]
+      triggers: ["analyze data", "investigate", "find errors", "pattern analysis", "audit data"]
+      keywords: [analyze, data, investigate, pattern, audit, anomaly, statistical]
+      mos_code: "35F"
+      phase_affinity: [1]
+      dependencies: []
+      fetchable: false
+      source: local
+
+  # ── SIF Orchestration ──────────────────────────────────────
+  sif_orchestration:
+    - id: mgmo-orchestration
+      name: "MGMO Orchestration"
+      lines: 550
+      categories: [meta]
+      triggers: ["Master Guru", "deploy minions", "orchestrate task"]
+      keywords: [mgmo, master, guru, minion, orchestrate, military, admiral]
+      mos_code: null
+      phase_affinity: [0, 7]
+      dependencies: [skill-router]
+      fetchable: false
+      source: local
+
+    - id: skill-router
+      name: "Skill Router"
+      lines: 480
+      categories: [meta]
+      triggers: ["route request", "available skills", "what skill", "discover capabilities"]
+      keywords: [router, skill, discover, route, catalogue, match, capability]
+      mos_code: null
+      phase_affinity: [0]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: skill-creator
+      name: "Skill Creator"
+      lines: 486
+      categories: [meta]
+      triggers: ["create skill", "new skill", "modify skill", "skill performance"]
+      keywords: [skill, create, modify, eval, benchmark, optimize]
+      mos_code: null
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: bootstrap-genesis
+      name: "Bootstrap Genesis"
+      lines: 212
+      categories: [bootstrap, meta]
+      triggers: ["genesis init", "new project", "bootstrap codebase", "set up Claude Code"]
+      keywords: [genesis, bootstrap, init, scaffold, progress, claude-md]
+      mos_code: "12B"
+      phase_affinity: [2]
+      dependencies: []
+      fetchable: false
+      source: local
+
+  # ── Marketing & Discovery ──────────────────────────────────
+  marketing_discovery:
+    - id: interactive-requirements-discovery
+      name: "Interactive Requirements Discovery"
+      lines: 334
+      categories: [planning]
+      triggers: ["build a SaaS", "help me create", "I want to build", "build an app"]
+      keywords: [requirements, discovery, interview, saas, build, create]
+      mos_code: "37F"
+      phase_affinity: [2]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: automated-ai-marketing-interactive-requirements-discovery
+      name: "AI Marketing Requirements Discovery"
+      lines: 467
+      categories: [planning, integration]
+      triggers: ["marketing workflow", "marketing automation", "n8n marketing", "automate marketing"]
+      keywords: [marketing, automation, n8n, workflow, email, social, campaign]
+      mos_code: "37F"
+      phase_affinity: [2]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: setup-guide-creator
+      name: "Setup Guide Creator"
+      lines: 307
+      categories: [document]
+      triggers: ["setup guide", "step-by-step guide", "dummy-proof guide", "complete guide"]
+      keywords: [setup, guide, step, tutorial, documentation, env, install]
+      mos_code: "42A"
+      phase_affinity: [6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: doc-coauthoring
+      name: "Doc Co-authoring"
+      lines: 376
+      categories: [document, communication]
+      triggers: ["co-author document", "write documentation", "draft spec", "decision doc"]
+      keywords: [doc, coauthor, documentation, proposal, spec, decision]
+      mos_code: "38B"
+      phase_affinity: [6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+    - id: internal-comms
+      name: "Internal Communications"
+      lines: 33
+      categories: [communication]
+      triggers: ["internal comms", "status report", "leadership update", "company newsletter"]
+      keywords: [internal, comms, status, report, update, newsletter, faq]
+      mos_code: "38B"
+      phase_affinity: [6]
+      dependencies: []
+      fetchable: false
+      source: local
+
+  # ── Utility ────────────────────────────────────────────────
+  utility:
+    - id: schedule
+      name: "Schedule"
+      lines: 38
+      categories: [meta]
+      triggers: ["schedule task", "run on interval", "automated task"]
+      keywords: [schedule, cron, interval, automated, task, recurring]
+      mos_code: null
+      phase_affinity: []
+      dependencies: []
+      fetchable: false
+      source: local
+
+
+# ────────────────────────────────────────────────────────────
+# SECTION 2: SIF-GENERATED SKILLS (92)
+# Source: sif-kb (github.com/Dshamir/sif-knowledge-base/skills/)
+# Activation: Auto-fetch via Skill Router v4 or manual copy
+# ────────────────────────────────────────────────────────────
+
+sif_generated:
+  count: 92
+  source: sif-kb
+  github_repo: "Dshamir/sif-knowledge-base"
+  github_base_path: "skills"
+  generated_date: "2026-02-27"
+
+  # ── Medical Imaging ────────────────────────────────────────
+  medical_imaging:
+    - id: medical-imaging-dicom
+      name: "Medical Imaging DICOM"
+      source_repo: segmentation-hub
+      lines: 2594
+      categories: [healthcare, medical_imaging]
+      triggers: ["DICOM", "medical imaging", "segmentation", "3D visualization"]
+      keywords: [dicom, nifti, pydicom, vtk, 3d-slicer, segmentation, medical]
+      mos_code: "68W"
+      phase_affinity: [3, 4]
+      dependencies: [genesis-healthcare]
+      fetchable: true
+      source: sif-kb
+
+    - id: surgical-planning-3d
+      name: "Surgical Planning 3D"
+      source_repo: app-JGH-3D-segmentation-Viewer
+      lines: 626
+      categories: [healthcare, medical_imaging]
+      triggers: ["surgical planning", "3D segmentation", "organ viewer"]
+      keywords: [surgical, planning, 3d, segmentation, viewer, organ]
+      mos_code: "68W"
+      phase_affinity: [3, 4]
+      dependencies: [medical-imaging-dicom]
+      fetchable: true
+      source: sif-kb
+
+    - id: ai-surgical-tray-analysis
+      name: "AI Surgical Tray Analysis"
+      source_repo: JGH-App-AI-surgical-tray-analyzer
+      lines: 330
+      categories: [healthcare, ai_ml]
+      triggers: ["surgical tray", "instrument detection", "surgical AI"]
+      keywords: [surgical, tray, instrument, detection, analysis, ai]
+      mos_code: "68W"
+      phase_affinity: [3, 4]
+      dependencies: [genesis-healthcare]
+      fetchable: true
+      source: sif-kb
+
+  # ── Computer Vision & Security ─────────────────────────────
+  computer_vision_security:
+    - id: computer-vision-recognition
+      name: "Computer Vision Recognition"
+      source_repo: HomeEye
+      lines: 1318
+      categories: [vision, security]
+      triggers: ["face recognition", "object detection", "computer vision", "surveillance"]
+      keywords: [opencv, face, recognition, detection, deepface, yolo, camera]
+      mos_code: "FA99"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: onvif-camera-control
+      name: "ONVIF Camera Control"
+      source_repo: HomeEye
+      lines: 340
+      categories: [vision, iot]
+      triggers: ["ONVIF", "IP camera", "camera control", "PTZ camera"]
+      keywords: [onvif, camera, ip, ptz, stream, rtsp]
+      mos_code: "FA99"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: video-streaming-go2rtc
+      name: "Video Streaming go2rtc"
+      source_repo: HomeEye
+      lines: 564
+      categories: [vision, infrastructure]
+      triggers: ["video streaming", "go2rtc", "WebRTC streaming", "RTSP proxy"]
+      keywords: [video, stream, go2rtc, webrtc, rtsp, proxy, hls]
+      mos_code: "FA99"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: ptz-automation-patrol
+      name: "PTZ Automation Patrol"
+      source_repo: HomeEye
+      lines: 295
+      categories: [vision, iot]
+      triggers: ["PTZ patrol", "camera automation", "preset patrol"]
+      keywords: [ptz, patrol, automation, preset, camera, schedule]
+      mos_code: "FA99"
+      phase_affinity: [4]
+      dependencies: [onvif-camera-control]
+      fetchable: true
+      source: sif-kb
+
+    - id: realtime-fall-detection
+      name: "Realtime Fall Detection"
+      source_repo: App-Real-Time-Fall-Detection
+      lines: 463
+      categories: [vision, healthcare]
+      triggers: ["fall detection", "pose estimation", "elder care AI"]
+      keywords: [fall, detection, pose, mediapipe, realtime, elder, safety]
+      mos_code: "FA99"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: cv-warehouse-retrieval
+      name: "CV Warehouse Retrieval"
+      source_repo: IMS-Nexless-Inventory-and-Retrieval-CV
+      lines: 469
+      categories: [vision, ecommerce]
+      triggers: ["warehouse vision", "inventory detection", "visual retrieval"]
+      keywords: [warehouse, inventory, detection, retrieval, visual, cv]
+      mos_code: "FA99"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+  # ── AI & Knowledge ─────────────────────────────────────────
+  ai_knowledge:
+    - id: rag-knowledge-pipeline
+      name: "RAG Knowledge Pipeline"
+      source_repo: IMS-supabase-store
+      lines: 1584
+      categories: [ai_ml, analysis]
+      triggers: ["RAG pipeline", "knowledge base", "vector store", "document ingestion"]
+      keywords: [rag, pipeline, knowledge, vector, supabase, ingestion, embedding]
+      mos_code: "35G"
+      phase_affinity: [3, 4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: langgraph-rag-pipeline
+      name: "LangGraph RAG Pipeline"
+      source_repo: SaaS-AVATAR-AI-Brain-Knowledge
+      lines: 478
+      categories: [ai_ml]
+      triggers: ["LangGraph", "stateful RAG", "agent RAG", "knowledge graph"]
+      keywords: [langgraph, rag, stateful, agent, graph, knowledge]
+      mos_code: "FA26"
+      phase_affinity: [3, 4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: chimera-cognitive-archaeology
+      name: "Chimera Cognitive Archaeology"
+      source_repo: SIF-Chimera-Daemon
+      lines: 891
+      categories: [ai_ml, meta]
+      triggers: ["cognitive archaeology", "knowledge extraction", "Chimera daemon"]
+      keywords: [chimera, cognitive, archaeology, extraction, daemon, sif]
+      mos_code: "97B"
+      phase_affinity: [1, 3]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: multi-format-extraction-pipeline
+      name: "Multi-Format Extraction Pipeline"
+      source_repo: SIF-Chimera-Daemon
+      lines: 603
+      categories: [ai_ml, analysis]
+      triggers: ["document extraction", "multi-format parsing", "content extraction"]
+      keywords: [extraction, pipeline, format, parse, content, document]
+      mos_code: "35G"
+      phase_affinity: [1, 4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: neural-persistence-memory
+      name: "Neural Persistence Memory"
+      source_repo: SIF-Chimera-Daemon
+      lines: 224
+      categories: [ai_ml, meta]
+      triggers: ["neural persistence", "memory system", "cognitive state"]
+      keywords: [neural, persistence, memory, state, cognitive, session]
+      mos_code: "97B"
+      phase_affinity: [3]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: sifql-query-language
+      name: "SIFQL Query Language"
+      source_repo: SIFQL
+      lines: 485
+      categories: [ai_ml, meta]
+      triggers: ["SIFQL", "query language", "knowledge query"]
+      keywords: [sifql, query, language, knowledge, search, filter]
+      mos_code: "35G"
+      phase_affinity: [1]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: plaud-ai-audio-intelligence
+      name: "Plaud AI Audio Intelligence"
+      source_repo: ToMerge-Audio-Recording-Hybrid
+      lines: 579
+      categories: [ai_ml, integration]
+      triggers: ["Plaud", "audio intelligence", "meeting transcription"]
+      keywords: [plaud, audio, intelligence, transcription, recording, meeting]
+      mos_code: "35G"
+      phase_affinity: [3, 4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: audio-transcription-sentiment-pipeline
+      name: "Audio Transcription Sentiment Pipeline"
+      source_repo: REC-Audio-Plaud-hybrid-app-prototype
+      lines: 345
+      categories: [ai_ml, analysis]
+      triggers: ["audio transcription", "sentiment analysis", "audio pipeline"]
+      keywords: [audio, transcription, sentiment, analysis, pipeline, speech]
+      mos_code: "35G"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: spaced-repetition-learning
+      name: "Spaced Repetition Learning"
+      source_repo: SaaS-MindCycle
+      lines: 677
+      categories: [ai_ml, development]
+      triggers: ["spaced repetition", "flashcards", "learning system", "MindCycle"]
+      keywords: [spaced, repetition, flashcard, learning, memory, review]
+      mos_code: "FA26"
+      phase_affinity: [3, 4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+  # ── SaaS Platform ──────────────────────────────────────────
+  saas_platform:
+    - id: white-label-saas-theming
+      name: "White-Label SaaS Theming"
+      source_repo: FORGE-Beacon
+      lines: 2161
+      categories: [development, design]
+      triggers: ["white-label", "multi-tenant theming", "SaaS branding"]
+      keywords: [white-label, theming, tenant, brand, customization, saas]
+      mos_code: "FA57"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: gdpr-soc2-compliance
+      name: "GDPR SOC2 Compliance"
+      source_repo: FORGE-Beacon
+      lines: 1671
+      categories: [security]
+      triggers: ["GDPR compliance", "SOC2 audit", "data protection", "privacy framework"]
+      keywords: [gdpr, soc2, compliance, privacy, data, protection, audit]
+      mos_code: "27D"
+      phase_affinity: [3, 5]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: multi-llm-content-factory
+      name: "Multi-LLM Content Factory"
+      source_repo: FORGE-Beacon
+      lines: 670
+      categories: [ai_ml, development]
+      triggers: ["content generation", "multi-LLM content", "content factory"]
+      keywords: [content, factory, llm, generation, multi, provider]
+      mos_code: "FA26"
+      phase_affinity: [4]
+      dependencies: [multi-provider-ai]
+      fetchable: true
+      source: sif-kb
+
+    - id: b2b-sales-intelligence
+      name: "B2B Sales Intelligence"
+      source_repo: FORGE-Outreach
+      lines: 291
+      categories: [analysis, communication]
+      triggers: ["B2B sales", "lead scoring", "sales intelligence", "outreach"]
+      keywords: [b2b, sales, intelligence, lead, scoring, outreach]
+      mos_code: "36B"
+      phase_affinity: [3, 4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: mcp-microservices-architecture
+      name: "MCP Microservices Architecture"
+      source_repo: SaaS-AI-Image-CLOUD-Repo-v3
+      lines: 653
+      categories: [infrastructure, development]
+      triggers: ["microservices", "MCP architecture", "service mesh"]
+      keywords: [microservices, mcp, architecture, service, mesh, api]
+      mos_code: "91B"
+      phase_affinity: [2, 4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: multi-sided-marketplace
+      name: "Multi-Sided Marketplace"
+      source_repo: Concept-GAX
+      lines: 179
+      categories: [planning, ecommerce]
+      triggers: ["marketplace platform", "multi-sided marketplace", "GAX"]
+      keywords: [marketplace, multi-sided, platform, buyer, seller, commission]
+      mos_code: "FA98"
+      phase_affinity: [2]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: prd-forge-accelerator
+      name: "PRD Forge Accelerator"
+      source_repo: SIF-PRD-Forge
+      lines: 674
+      categories: [planning, meta]
+      triggers: ["PRD forge", "accelerated PRD", "rapid requirements"]
+      keywords: [prd, forge, accelerator, requirements, rapid, generation]
+      mos_code: "FA57"
+      phase_affinity: [2]
+      dependencies: [enterprise-prd-generator]
+      fetchable: true
+      source: sif-kb
+
+    - id: sif-catalogue-manager
+      name: "SIF Catalogue Manager"
+      source_repo: SIF-CATALOGUE-Manager
+      lines: 453
+      categories: [meta]
+      triggers: ["catalogue manager", "skill inventory", "SIF catalogue"]
+      keywords: [catalogue, manager, inventory, skill, sif, registry]
+      mos_code: null
+      phase_affinity: [0]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: hipaa-avatar-pipeline
+      name: "HIPAA Avatar Pipeline"
+      source_repo: IMD-Avatar-Pipeline-MVP
+      lines: 375
+      categories: [healthcare, avatar]
+      triggers: ["HIPAA avatar", "medical avatar", "compliant avatar pipeline"]
+      keywords: [hipaa, avatar, pipeline, medical, compliant, video]
+      mos_code: "FA49"
+      phase_affinity: [3, 4]
+      dependencies: [genesis-healthcare, genesis-avatar, audit-first-ai]
+      fetchable: true
+      source: sif-kb
+
+    - id: freepbx-voip-ai-integration
+      name: "FreePBX VoIP AI Integration"
+      source_repo: IMD-SaaS-Omnium-VoIP-PBX-Avatar
+      lines: 337
+      categories: [integration, ai_ml]
+      triggers: ["FreePBX", "VoIP AI", "PBX integration", "phone AI"]
+      keywords: [freepbx, voip, pbx, phone, sip, asterisk, ai]
+      mos_code: "25S"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+  # ── E-Commerce & Retail ────────────────────────────────────
+  ecommerce_retail:
+    - id: pos-retail-systems
+      name: "POS Retail Systems"
+      source_repo: IMS-supabase-store
+      lines: 1367
+      categories: [ecommerce, development]
+      triggers: ["POS system", "retail", "point of sale", "inventory management"]
+      keywords: [pos, retail, inventory, sale, barcode, receipt, payment]
+      mos_code: "92A"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: ecommerce-print-on-demand
+      name: "E-Commerce Print on Demand"
+      source_repo: ecom-tshirt4free
+      lines: 282
+      categories: [ecommerce]
+      triggers: ["print on demand", "t-shirt store", "POD e-commerce"]
+      keywords: [print, demand, pod, tshirt, ecommerce, store, shopify]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: marketplace-multi-platform-sync
+      name: "Marketplace Multi-Platform Sync"
+      source_repo: IMS-supabase-store
+      lines: 285
+      categories: [ecommerce, integration]
+      triggers: ["marketplace sync", "multi-platform", "inventory sync"]
+      keywords: [marketplace, sync, platform, inventory, amazon, ebay]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: image-phash-similarity
+      name: "Image pHash Similarity"
+      source_repo: IMS-supabase-store
+      lines: 265
+      categories: [ecommerce, vision]
+      triggers: ["image similarity", "perceptual hash", "duplicate detection"]
+      keywords: [phash, image, similarity, hash, duplicate, perceptual]
+      mos_code: "FA99"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: exif-metadata-processing
+      name: "EXIF Metadata Processing"
+      source_repo: IMS-supabase-store
+      lines: 252
+      categories: [ecommerce, analysis]
+      triggers: ["EXIF metadata", "image metadata", "photo data extraction"]
+      keywords: [exif, metadata, image, photo, extraction, gps, camera]
+      mos_code: "35F"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: pick2light-warehouse
+      name: "Pick2Light Warehouse"
+      source_repo: IMS-Enterprise-Pick2Light
+      lines: 521
+      categories: [ecommerce, iot]
+      triggers: ["pick to light", "warehouse automation", "pick2light"]
+      keywords: [pick2light, warehouse, picking, automation, led, bin]
+      mos_code: "92A"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+  # ── Cloud Infrastructure ───────────────────────────────────
+  cloud_infrastructure:
+    - id: cloud-gpu-orchestration
+      name: "Cloud GPU Orchestration"
+      source_repo: Cloud-GPU-Bridge
+      lines: 133
+      categories: [infrastructure, ai_ml]
+      triggers: ["GPU orchestration", "cloud GPU", "GPU bridge"]
+      keywords: [gpu, cloud, orchestration, bridge, compute, cuda]
+      mos_code: "91B"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: kubernetes-cloud-native
+      name: "Kubernetes Cloud Native"
+      source_repo: segmentation-hub
+      lines: 595
+      categories: [infrastructure]
+      triggers: ["Kubernetes", "cloud native", "container orchestration", "k8s"]
+      keywords: [kubernetes, k8s, docker, container, helm, cloud, native]
+      mos_code: "91B"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: realtime-collaboration-websocket
+      name: "Realtime Collaboration WebSocket"
+      source_repo: segmentation-hub
+      lines: 1421
+      categories: [infrastructure, development]
+      triggers: ["real-time collaboration", "WebSocket", "collaborative editing"]
+      keywords: [realtime, websocket, collaboration, sync, crdt, socket]
+      mos_code: "94E"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: monorepo-turborepo-management
+      name: "Monorepo Turborepo Management"
+      source_repo: nexless-rvd-mesh
+      lines: 266
+      categories: [infrastructure, development]
+      triggers: ["turborepo", "monorepo management", "build pipeline"]
+      keywords: [monorepo, turborepo, build, pipeline, workspace, cache]
+      mos_code: "74D"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: security-hardening-rate-limiting
+      name: "Security Hardening Rate Limiting"
+      source_repo: SIF-Chimera-Daemon
+      lines: 234
+      categories: [security, infrastructure]
+      triggers: ["rate limiting", "security hardening", "API protection"]
+      keywords: [rate, limiting, hardening, security, api, protection, throttle]
+      mos_code: "31B"
+      phase_affinity: [5]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: tbv-o-security-verification
+      name: "TBV-O Security Verification"
+      source_repo: FORGE-Beacon
+      lines: 289
+      categories: [security]
+      triggers: ["trust verification", "TBV-O", "security verification"]
+      keywords: [tbv, verification, trust, security, badge, attestation]
+      mos_code: "31B"
+      phase_affinity: [5]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+  # ── Remote & Networking ────────────────────────────────────
+  remote_networking:
+    - id: vpn-remote-access
+      name: "VPN Remote Access"
+      source_repo: RemoteDIR
+      lines: 321
+      categories: [networking, security]
+      triggers: ["VPN", "remote access", "secure tunnel"]
+      keywords: [vpn, remote, access, tunnel, wireguard, openvpn]
+      mos_code: "94E"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: document-search-tunnel
+      name: "Document Search Tunnel"
+      source_repo: RFUSP
+      lines: 272
+      categories: [networking, analysis]
+      triggers: ["document tunnel", "remote search", "RFUSP"]
+      keywords: [document, search, tunnel, remote, rfusp, secure]
+      mos_code: "94E"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: remote-nas-provisioning
+      name: "Remote NAS Provisioning"
+      source_repo: Remote-Drive
+      lines: 327
+      categories: [networking, infrastructure]
+      triggers: ["NAS provisioning", "remote drive", "network storage"]
+      keywords: [nas, remote, drive, storage, provision, network, smb]
+      mos_code: "94E"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+  # ── IoT & Embedded ─────────────────────────────────────────
+  iot_embedded:
+    - id: esp32-iot-device-orchestration
+      name: "ESP32 IoT Device Orchestration"
+      source_repo: App-NX-Device-ESP32
+      lines: 285
+      categories: [iot]
+      triggers: ["ESP32", "IoT device", "microcontroller", "Arduino"]
+      keywords: [esp32, iot, device, microcontroller, arduino, sensor, mqtt]
+      mos_code: "FA97"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: rfid-nfc-scanner
+      name: "RFID NFC Scanner"
+      source_repo: IMS-RFID-Xiao-RP2040
+      lines: 554
+      categories: [iot, ecommerce]
+      triggers: ["RFID scanner", "NFC reader", "tag scanning"]
+      keywords: [rfid, nfc, scanner, reader, tag, xiao, rp2040]
+      mos_code: "FA97"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: ir-remote-device-control
+      name: "IR Remote Device Control"
+      source_repo: App-NX-OMOTE-Device
+      lines: 616
+      categories: [iot]
+      triggers: ["IR remote", "infrared control", "OMOTE", "universal remote"]
+      keywords: [ir, infrared, remote, control, omote, device, universal]
+      mos_code: "FA97"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+  # ── SEO & Search Optimization ───────────────────────────────
+  seo_search_optimization:
+    - id: seo-orchestrator
+      name: "SEO Orchestrator"
+      lines: 180
+      categories: [seo, orchestration, analysis]
+      triggers:
+        - "SEO"
+        - "audit site"
+        - "search optimization"
+        - "analyze SEO"
+      keywords: [seo, search, optimization, audit, ranking, serp, google]
+      mos_code: "46S"
+      phase_affinity: [RECON, ASSAULT]
+      dependencies: [web_fetch, web_search]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-audit
+      name: "SEO Full Audit"
+      lines: 95
+      categories: [seo, audit, analysis]
+      triggers:
+        - "full SEO check"
+        - "website health"
+        - "SEO audit"
+        - "analyze my site"
+      keywords: [audit, health-score, crawl, index, seo-check]
+      mos_code: "46S"
+      phase_affinity: [RECON]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-page
+      name: "SEO Page Analysis"
+      lines: 85
+      categories: [seo, analysis, on-page]
+      triggers:
+        - "analyze this page"
+        - "check page SEO"
+        - "single URL review"
+      keywords: [page-seo, on-page, meta-tags, content-analysis]
+      mos_code: "46S"
+      phase_affinity: [RECON]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-technical
+      name: "SEO Technical Audit"
+      lines: 210
+      categories: [seo, technical, performance]
+      triggers:
+        - "technical SEO"
+        - "crawl issues"
+        - "robots.txt"
+        - "Core Web Vitals"
+        - "site speed"
+      keywords: [technical-seo, crawl, index, security, cwv, mobile, javascript-rendering]
+      mos_code: "46S"
+      phase_affinity: [RECON, ASSAULT]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-content
+      name: "SEO Content Quality"
+      lines: 200
+      categories: [seo, content, eeat]
+      triggers:
+        - "E-E-A-T"
+        - "content quality"
+        - "thin content"
+        - "content audit"
+      keywords: [eeat, content-quality, readability, ai-citation, thin-content]
+      mos_code: "46S"
+      phase_affinity: [RECON, ASSAULT]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-schema
+      name: "SEO Schema Markup"
+      lines: 140
+      categories: [seo, schema, structured-data]
+      triggers:
+        - "schema"
+        - "structured data"
+        - "JSON-LD"
+        - "rich results"
+      keywords: [schema-org, json-ld, structured-data, rich-results, markup]
+      mos_code: "46S"
+      phase_affinity: [ASSAULT]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-images
+      name: "SEO Image Optimization"
+      lines: 170
+      categories: [seo, images, performance]
+      triggers:
+        - "image optimization"
+        - "alt text"
+        - "image SEO"
+      keywords: [images, alt-text, webp, lazy-loading, cls, responsive-images]
+      mos_code: "46S"
+      phase_affinity: [ASSAULT]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-sitemap
+      name: "SEO Sitemap"
+      lines: 100
+      categories: [seo, sitemap, technical]
+      triggers:
+        - "sitemap"
+        - "XML sitemap"
+        - "generate sitemap"
+      keywords: [sitemap, xml-sitemap, url-structure, crawl-budget]
+      mos_code: "46S"
+      phase_affinity: [ASSAULT]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-geo
+      name: "SEO GEO / AI Overviews"
+      lines: 230
+      categories: [seo, geo, ai-search]
+      triggers:
+        - "AI Overviews"
+        - "GEO"
+        - "AI search"
+        - "Perplexity"
+        - "ChatGPT search"
+      keywords: [geo, ai-overviews, sge, perplexity, llm-optimization, ai-citations]
+      mos_code: "46S"
+      phase_affinity: [RECON, ASSAULT]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-plan
+      name: "SEO Strategic Planning"
+      lines: 100
+      categories: [seo, strategy, planning]
+      triggers:
+        - "SEO plan"
+        - "SEO strategy"
+        - "content strategy"
+        - "SEO roadmap"
+      keywords: [seo-plan, strategy, content-strategy, site-architecture, roadmap]
+      mos_code: "46S"
+      phase_affinity: [BLUEPRINT, BRIEFING]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-programmatic
+      name: "SEO Programmatic Pages"
+      lines: 250
+      categories: [seo, programmatic, scale]
+      triggers:
+        - "programmatic SEO"
+        - "pages at scale"
+        - "template pages"
+        - "data-driven SEO"
+      keywords: [programmatic-seo, template-pages, index-bloat, quality-gates, data-driven]
+      mos_code: "46S"
+      phase_affinity: [BLUEPRINT, ASSAULT]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-competitor-pages
+      name: "SEO Competitor Comparison"
+      lines: 220
+      categories: [seo, competitor, content-generation]
+      triggers:
+        - "comparison page"
+        - "vs page"
+        - "alternatives page"
+        - "X vs Y"
+      keywords: [comparison, alternatives, competitor, versus, feature-matrix]
+      mos_code: "46S"
+      phase_affinity: [ASSAULT]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+    - id: seo-hreflang
+      name: "SEO Hreflang / i18n"
+      lines: 250
+      categories: [seo, international, i18n]
+      triggers:
+        - "hreflang"
+        - "international SEO"
+        - "multi-language"
+        - "multi-region"
+      keywords: [hreflang, i18n, international-seo, language-tags, multi-region]
+      mos_code: "46S"
+      phase_affinity: [ASSAULT]
+      dependencies: [seo-orchestrator]
+      fetchable: true
+      source: sif-kb
+
+  # ── UAC Infrastructure (Universal Admin Console) ───────────
+  uac_infrastructure:
+    - id: uac-core-framework
+      name: "UAC Core Framework"
+      source_repo: sif-knowledge-base
+      lines: 1850
+      categories: [development, infrastructure]
+      triggers: ["admin console", "UAC framework", "config-driven admin"]
+      keywords: [uac, admin, console, framework, config, dashboard]
+      mos_code: "FA57"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-authentication-rbac
+      name: "UAC Authentication RBAC"
+      source_repo: sif-knowledge-base
+      lines: 1650
+      categories: [security, development]
+      triggers: ["RBAC", "authentication UAC", "role-based access"]
+      keywords: [rbac, authentication, role, access, permission, uac]
+      mos_code: "31B"
+      phase_affinity: [4, 5]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-webhook-events
+      name: "UAC Webhook Events"
+      source_repo: sif-knowledge-base
+      lines: 1450
+      categories: [integration, development]
+      triggers: ["webhook events", "UAC webhooks", "event-driven admin"]
+      keywords: [webhook, event, notification, uac, trigger, callback]
+      mos_code: "25S"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-multi-tenant-isolation
+      name: "UAC Multi-Tenant Isolation"
+      source_repo: sif-knowledge-base
+      lines: 1550
+      categories: [security, infrastructure]
+      triggers: ["multi-tenant", "tenant isolation", "UAC multi-tenant"]
+      keywords: [tenant, isolation, multi, partition, uac, security]
+      mos_code: "31B"
+      phase_affinity: [4, 5]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-audit-compliance-logging
+      name: "UAC Audit Compliance Logging"
+      source_repo: sif-knowledge-base
+      lines: 1550
+      categories: [security]
+      triggers: ["audit logging", "compliance logging", "UAC audit"]
+      keywords: [audit, compliance, logging, trail, uac, tamper]
+      mos_code: "27D"
+      phase_affinity: [5]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-analytics-reporting
+      name: "UAC Analytics Reporting"
+      source_repo: sif-knowledge-base
+      lines: 1400
+      categories: [analysis, development]
+      triggers: ["analytics dashboard", "UAC reporting", "admin analytics"]
+      keywords: [analytics, reporting, dashboard, metrics, uac, chart]
+      mos_code: "35F"
+      phase_affinity: [4, 6]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: shopify-uac-plugin
+      name: "Shopify UAC Plugin"
+      source_repo: sif-knowledge-base
+      lines: 1800
+      categories: [ecommerce, integration]
+      triggers: ["Shopify admin", "Shopify UAC", "Shopify integration"]
+      keywords: [shopify, admin, plugin, ecommerce, uac, store]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: stripe-uac-plugin
+      name: "Stripe UAC Plugin"
+      source_repo: sif-knowledge-base
+      lines: 1750
+      categories: [ecommerce, integration]
+      triggers: ["Stripe admin", "payment admin", "Stripe UAC"]
+      keywords: [stripe, payment, admin, plugin, uac, billing]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: amazon-uac-plugin
+      name: "Amazon UAC Plugin"
+      source_repo: sif-knowledge-base
+      lines: 1800
+      categories: [ecommerce, integration]
+      triggers: ["Amazon admin", "Amazon Seller UAC", "Amazon integration"]
+      keywords: [amazon, seller, admin, plugin, uac, marketplace]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: facebook-commerce-uac-plugin
+      name: "Facebook Commerce UAC Plugin"
+      source_repo: sif-knowledge-base
+      lines: 1750
+      categories: [ecommerce, integration]
+      triggers: ["Facebook Commerce", "Meta Commerce UAC", "Facebook shops"]
+      keywords: [facebook, meta, commerce, shops, admin, plugin, uac]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: ebay-uac-plugin
+      name: "eBay UAC Plugin"
+      source_repo: sif-knowledge-base
+      lines: 1700
+      categories: [ecommerce, integration]
+      triggers: ["eBay admin", "eBay UAC", "eBay integration"]
+      keywords: [ebay, admin, plugin, uac, marketplace, auction]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: google-merchant-uac-plugin
+      name: "Google Merchant UAC Plugin"
+      source_repo: sif-knowledge-base
+      lines: 1650
+      categories: [ecommerce, integration]
+      triggers: ["Google Merchant", "Google Shopping UAC", "Merchant Center"]
+      keywords: [google, merchant, shopping, admin, plugin, uac]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: woocommerce-uac-plugin
+      name: "WooCommerce UAC Plugin"
+      source_repo: sif-knowledge-base
+      lines: 1700
+      categories: [ecommerce, integration]
+      triggers: ["WooCommerce admin", "WooCommerce UAC", "WordPress commerce"]
+      keywords: [woocommerce, wordpress, admin, plugin, uac, store]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: tiktok-shop-uac-plugin
+      name: "TikTok Shop UAC Plugin"
+      source_repo: sif-knowledge-base
+      lines: 1650
+      categories: [ecommerce, integration]
+      triggers: ["TikTok Shop", "TikTok commerce", "TikTok UAC"]
+      keywords: [tiktok, shop, commerce, admin, plugin, uac, social]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-master-index
+      name: "UAC Master Index"
+      source_repo: sif-knowledge-base
+      lines: 900
+      categories: [meta, ecommerce]
+      triggers: ["UAC index", "all UAC plugins", "UAC master"]
+      keywords: [uac, index, master, all, plugins, registry]
+      mos_code: null
+      phase_affinity: [0]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+  # ── Uncatalogued Skills (17 — added 2026-02-28 reconciliation) ──
+
+  # ── SIF Core & Meta ────────────────────────────────────────
+  sif_core_meta:
+    - id: sif-kernel
+      name: "SIF Kernel"
+      source_repo: sif-knowledge-base
+      lines: 146
+      categories: [meta]
+      triggers: ["SIF kernel", "total recall", "pointer graph load", "session start"]
+      keywords: [sif, kernel, pointer, graph, recall, session, sync]
+      mos_code: null
+      phase_affinity: [0]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: project-genesis
+      name: "Project Genesis"
+      source_repo: sif-knowledge-base
+      lines: 261
+      categories: [bootstrap, meta]
+      triggers: ["project genesis", "bootstrap codebase", "analyze existing project"]
+      keywords: [genesis, bootstrap, analyze, codebase, claude-code, scaffold]
+      mos_code: "12B"
+      phase_affinity: [1, 2]
+      dependencies: [bootstrap-genesis]
+      fetchable: true
+      source: sif-kb
+
+    - id: sif-skill-deployer
+      name: "SIF Skill Deployer"
+      source_repo: sif-knowledge-base
+      lines: 376
+      categories: [meta, devops]
+      triggers: ["deploy SIF skills", "sync skills from GitHub", "install SIF skills", "package skills"]
+      keywords: [sif, deploy, skill, package, install, sync, github]
+      mos_code: "25B"
+      phase_affinity: [0, 4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+    - id: skill-2-claude-skills
+      name: "Skill-2-Claude-Skills Pipeline"
+      source_repo: sif-knowledge-base
+      lines: 398
+      categories: [meta, devops]
+      triggers: ["convert skills", "skills pipeline", "claude skills deployment"]
+      keywords: [skill, claude, pipeline, convert, deploy, package]
+      mos_code: "25B"
+      phase_affinity: [4]
+      dependencies: [sif-skill-deployer]
+      fetchable: true
+      source: sif-kb
+
+    - id: dealer-leads-generator
+      name: "Dealer Leads Generator"
+      source_repo: sif-knowledge-base
+      lines: 326
+      categories: [ecommerce, analysis]
+      triggers: ["dealer leads", "vehicle inventory", "powersports leads", "marine leads"]
+      keywords: [dealer, leads, vehicle, inventory, automotive, powersports, marine]
+      mos_code: "36B"
+      phase_affinity: [4]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+  # ── UAC Additional Plugins ─────────────────────────────────
+  uac_additional:
+    - id: uac-integration
+      name: "UAC Integration"
+      source_repo: sif-knowledge-base
+      lines: 2137
+      categories: [development, infrastructure]
+      triggers: ["UAC integration", "admin console framework", "config-driven admin"]
+      keywords: [uac, admin, console, integration, config, crud, framework]
+      mos_code: "FA57"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: etsy-uac-plugin
+      name: "Etsy UAC Plugin"
+      source_repo: sif-knowledge-base
+      lines: 1208
+      categories: [ecommerce, integration]
+      triggers: ["Etsy admin", "Etsy UAC", "Etsy integration", "Etsy marketplace"]
+      keywords: [etsy, admin, plugin, uac, marketplace, handmade]
+      mos_code: "FA98"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-plugin-ai-visual-recognition
+      name: "UAC Plugin - AI Visual Product Recognition"
+      source_repo: sif-knowledge-base
+      lines: 82
+      categories: [ecommerce, vision, ai_ml]
+      triggers: ["visual product recognition", "product image AI", "visual search UAC"]
+      keywords: [visual, recognition, product, image, ai, vision, uac]
+      mos_code: "FA99"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-plugin-custom-ai-agents
+      name: "UAC Plugin - Custom AI Agent Builder"
+      source_repo: sif-knowledge-base
+      lines: 10
+      categories: [ai_ml, development]
+      triggers: ["custom AI agents", "admin AI assistant", "UAC AI builder"]
+      keywords: [ai, agent, custom, builder, assistant, uac]
+      mos_code: "FA26"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-plugin-dynamic-navigation
+      name: "UAC Plugin - Dynamic Navigation Menu System"
+      source_repo: sif-knowledge-base
+      lines: 11
+      categories: [development, design]
+      triggers: ["dynamic navigation", "menu builder", "drag-and-drop nav"]
+      keywords: [navigation, menu, dynamic, drag, drop, admin, uac]
+      mos_code: "FA57"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-plugin-infrastructure
+      name: "UAC Plugin - Infrastructure"
+      source_repo: sif-knowledge-base
+      lines: 0
+      categories: [infrastructure]
+      triggers: ["UAC infrastructure plugin", "admin infrastructure"]
+      keywords: [uac, infrastructure, plugin, admin, deploy]
+      mos_code: "91B"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-plugin-manufacturing-bom
+      name: "UAC Plugin - Manufacturing BOM"
+      source_repo: sif-knowledge-base
+      lines: 0
+      categories: [ecommerce, development]
+      triggers: ["manufacturing BOM", "bill of materials", "production tracking"]
+      keywords: [manufacturing, bom, bill, materials, production, uac]
+      mos_code: "92A"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-plugin-ocr-invoice-processor
+      name: "UAC Plugin - OCR Invoice Processing Pipeline"
+      source_repo: sif-knowledge-base
+      lines: 11
+      categories: [ai_ml, ecommerce]
+      triggers: ["OCR invoice", "invoice processing", "packing slip extraction"]
+      keywords: [ocr, invoice, processor, extraction, packing, slip, uac]
+      mos_code: "35F"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-plugin-pick2light-warehouse
+      name: "UAC Plugin - WLED Pick2Light Warehouse"
+      source_repo: sif-knowledge-base
+      lines: 123
+      categories: [ecommerce, iot]
+      triggers: ["pick2light UAC", "WLED warehouse", "LED guided picking"]
+      keywords: [pick2light, wled, warehouse, led, picking, esp32, uac]
+      mos_code: "92A"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework, pick2light-warehouse]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-plugin-report-designer
+      name: "UAC Plugin - Professional Report Designer"
+      source_repo: sif-knowledge-base
+      lines: 79
+      categories: [development, document]
+      triggers: ["report designer", "drag-and-drop reports", "SQL report builder"]
+      keywords: [report, designer, drag, drop, sql, export, template, uac]
+      mos_code: "42A"
+      phase_affinity: [4, 6]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-plugin-theme-builder
+      name: "UAC Plugin - Multi-Tenant Theme Builder"
+      source_repo: sif-knowledge-base
+      lines: 109
+      categories: [design, development]
+      triggers: ["theme builder UAC", "tenant theming", "WCAG theme editor"]
+      keywords: [theme, builder, tenant, css, wcag, preview, uac]
+      mos_code: "46R"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+    - id: uac-plugin-warehouse-zones
+      name: "UAC Plugin - Interactive Warehouse Zone Editor"
+      source_repo: sif-knowledge-base
+      lines: 109
+      categories: [ecommerce, development]
+      triggers: ["warehouse zones", "zone editor", "warehouse layout", "heat map warehouse"]
+      keywords: [warehouse, zone, editor, layout, heatmap, pick, path, uac]
+      mos_code: "92A"
+      phase_affinity: [4]
+      dependencies: [uac-core-framework]
+      fetchable: true
+      source: sif-kb
+
+  # ── DevOps & Tooling ────────────────────────────────────────
+  devops_tooling:
+    - id: sif-plugin-installer
+      name: "SIF Plugin Installer"
+      source_repo: sif-knowledge-base
+      lines: 116
+      categories: [devops, tooling, meta]
+      triggers: ["install sif", "load sif skills", "setup sif plugin", "sif not loading", "skills missing", "sif setup", "new machine setup"]
+      keywords: [sif, plugin, install, marketplace, claude-code, skills, setup, bashrc, alias]
+      mos_code: "25B"
+      phase_affinity: [0, 1]
+      dependencies: []
+      fetchable: true
+      source: sif-kb
+
+
+# ────────────────────────────────────────────────────────────
+# ROUTING CONFIGURATION
+# ────────────────────────────────────────────────────────────
+
+routing_config:
+  confidence_weights:
+    trigger_match: 0.35
+    keyword_overlap: 0.25
+    category_match: 0.20
+    mos_alignment: 0.10
+    dependency_pull: 0.10
+  minimum_threshold: 0.30
+  auto_fetch_enabled: true
+  auto_fetch_source: "sif-kb"
+
+# ────────────────────────────────────────────────────────────
+# ACTIVATION GUIDE
+# ────────────────────────────────────────────────────────────
+
+activation_guide:
+  cowork:
+    method: "Skills loaded from Cowork's skills system at session start"
+    custom_skills: "Upload SKILL.md files via Cowork Settings → Skills"
+    note: "The .skills directory is read-only at runtime"
+
+  claude_code:
+    method: "Copy SKILL.md to your project's .claude/skills/ directory"
+    steps:
+      - "Clone sif-knowledge-base repo"
+      - "Copy skills/[name]/SKILL.md to .claude/skills/[name]/SKILL.md"
+      - "Skills auto-trigger based on description matching"
+
+  sif_session:
+    method: "Skills auto-discovered by Skill Router v4 during MGMO v3 operations"
+    steps:
+      - "Say 'Master Guru' to invoke MGMO v3"
+      - "Skill Router v4 scans all 4 sources (filesystem + catalogue + MCP + remote)"
+      - "Matching skills loaded into minion context with MOS assignments"
+      - "Non-local skills auto-fetched from SIF Knowledge Base if needed"

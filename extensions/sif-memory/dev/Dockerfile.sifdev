@@ -25,6 +25,11 @@ RUN find /app/extensions/sif-memory -type d -exec chmod 755 {} + && \
 COPY --chown=node:node extensions/sif-memory/dev/workspace/ /home/node/.openclaw/workspace/
 RUN find /home/node/.openclaw/workspace -type f -exec chmod 644 {} +
 
+# Copy SIF KB skills (staged from ../sif-knowledge-base/skills/ by sifdev.sh)
+COPY --chown=node:node extensions/sif-memory/dev/.sif-skills/ /app/skills/
+RUN find /app/skills -type d -exec chmod 755 {} + && \
+    find /app/skills -type f -exec chmod 644 {} +
+
 # Pre-configure memory.backend=sif + skip device pairing for Control UI (dev only)
 RUN mkdir -p /home/node/.openclaw/sif && \
     chown -R node:node /home/node/.openclaw && \

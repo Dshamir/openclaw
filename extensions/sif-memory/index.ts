@@ -12,21 +12,14 @@ const sifMemoryPlugin = {
     "Sovereign Intelligence Framework — persistent pointer-graph memory with Hebbian reinforcement",
   kind: "memory" as const,
 
-  async register(api: OpenClawPluginApi) {
+  register(api: OpenClawPluginApi) {
     const rawConfig = (api.pluginConfig ?? {}) as Partial<SifConfig>;
     const config = resolveConfig(rawConfig);
     const graphPath = resolveGraphPath(config.graphPath);
 
     const graph = new PointerGraph(graphPath, config.decayHalfLifeDays);
 
-    try {
-      await graph.load();
-      api.logger.info(`sif-memory: loaded graph from ${graphPath} (${graph.size()} pointers)`);
-    } catch (err) {
-      api.logger.warn(`sif-memory: failed to load graph, starting fresh: ${String(err)}`);
-    }
-
-    // Register tools
+    // Register tools (graph loads lazily in service start)
     const tools = createSifTools(graph);
     for (const tool of tools) {
       api.registerTool(tool, { name: tool.name });
@@ -75,13 +68,16 @@ const sifMemoryPlugin = {
       { commands: ["sif"] },
     );
 
-    // Register service for lifecycle
+    // Load graph and manage lifecycle via service (start/stop are properly awaited)
     api.registerService({
       id: "sif-memory",
-      start: () => {
-        api.logger.info(
-          `sif-memory: service started (${graph.size()} pointers, path: ${graphPath})`,
-        );
+      start: async () => {
+        try {
+          await graph.load();
+          api.logger.info(`sif-memory: loaded graph from ${graphPath} (${graph.size()} pointers)`);
+        } catch (err) {
+          api.logger.warn(`sif-memory: failed to load graph, starting fresh: ${String(err)}`);
+        }
       },
       stop: async () => {
         if (graph.isDirty()) {
